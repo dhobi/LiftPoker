@@ -24,8 +24,11 @@ function Countdown() {
     }
 
     this.stop = function() {
-       document.getElementById(docid).style.display = "none";
-        clearTimeout(timer);
+       clearTimeout(timer);
+       if(document.getElementById(docid)) {
+        document.getElementById(docid).style.display = "none";
+       }
+
     }
 
 }

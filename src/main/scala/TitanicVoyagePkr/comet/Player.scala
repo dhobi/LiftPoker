@@ -131,15 +131,15 @@ class Player extends CometActor {
     case ShowAllMoney(players: List[Player], money: int) => {
       partialUpdate(clearMoney(players) & showAllMoney(money))
     }
-    case ShowMessage(player:String,str : String) => {
-      partialUpdate(JsRaw(";document.getElementById('chatmessages').innerHTML += '"+player+": "+str.replace("&","&amp;").replace("'","&#39;")+"<br/>';document.getElementById('chatmessages').scrollTop = document.getElementById('chatmessages').scrollHeight;").cmd)
+    case ShowMessage(player: String, str: String) => {
+      partialUpdate(JsRaw(";document.getElementById('chatmessages').innerHTML += '" + player + ": " + str.replace("&", "&amp;").replace("'", "&#39;") + "<br/>';document.getElementById('chatmessages').scrollTop = document.getElementById('chatmessages').scrollHeight;").cmd)
     }
   }
 
   def clearNames: JsCmd = {
     (1 to 4).map(i => {
-      var html : NodeSeq = Text("")
-      if(id == 0) {
+      var html: NodeSeq = Text("")
+      if (id == 0) {
         html = SHtml.a(() => {Table.table ! AddPlayerToTable(this, i); clearNames; }, Text("Sit down"))
       }
       JqSetHtml("player" + i + "name", html)
@@ -147,7 +147,7 @@ class Player extends CometActor {
   }
 
   def updatePlayers(users: List[Player]): JsCmd = {
-    clearNames & users.map(user => JqSetHtml("player" + user.id + "name", Text(user.playername + "" + user.money.get))).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
+    clearNames & users.map(user => JqSetHtml("player" + user.id + "name", Text(user.playername) ++ <span style="margin-left:20px;">{user.money.get}</span>)).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
   }
 
 
@@ -182,8 +182,13 @@ class Player extends CometActor {
 
   def updateWait(users: List[Player], user: Player): JsCmd = {
     updatePlayers(users) &
-            users.map(user => JE.JsRaw("document.getElementById('player" + user.id + "name').setAttribute('class','playername')").cmd).foldLeft[JsCmd](JsCmds.Noop)(_ & _) & JE.JsRaw("document.getElementById('player" + user.id + "name').setAttribute('class','playernameactive')").cmd &
+            clearNamePlates &
+            JE.JsRaw("document.getElementById('player" + user.id + "name').setAttribute('class','playernameactive')").cmd &
             setAction(user)
+  }
+
+  def clearNamePlates: JsCmd = {
+    (1 to 4).map(i => JE.JsRaw("document.getElementById('player" + i + "name').setAttribute('class','playername')").cmd).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
   }
 
   def setCountdown(s: int) = {
@@ -204,7 +209,7 @@ class Player extends CometActor {
     if (player.id == this.id) {
 
       //setTimeout
-      future = ActorPing.schedule(Table.table, TimeOut(this), 30000L)
+      future = ActorPing.schedule(Table.table, TimeOut(this), 35000L)
 
       html = SHtml.a(() => {Table.table ! Fold(this); future.cancel(true); hideActionForm}, <span class="action">Fold</span>)
       if (usedMoney == Table.table.getHighestRoundMoney.get) {
@@ -220,7 +225,7 @@ class Player extends CometActor {
       }
 
     }
-    JqSetHtml("player" + id + "action", html) & JsRaw("countdown.start('player" + player.id + "countdown')").cmd
+    JqSetHtml("player" + id + "action", html) & JsRaw("countdown.stop();countdown.start('player" + player.id + "countdown')").cmd
   }
 
   def hideActionForm: JsCmd = {
@@ -241,6 +246,7 @@ class Player extends CometActor {
     cards = List()
     handrank = null
     usedMoney = 0
+    satisfied = false
 
     JqSetHtml("player1card1", Text("")) & JqSetHtml("player1card2", Text("")) &
             JqSetHtml("player2card1", Text("")) & JqSetHtml("player2card2", Text("")) &
@@ -259,7 +265,8 @@ class Player extends CometActor {
             JqSetHtml("flop3", Text("")) &
             JqSetHtml("turn", Text("")) &
             JqSetHtml("river", Text("")) &
-            JsCmds.JsHideId("allmoney")
+            JsCmds.JsHideId("allmoney") &
+            JsCmds.JsHideId("winner")
   }
 
   def showFlop(cards: List[Card]): JsCmd = {
@@ -293,8 +300,13 @@ class Player extends CometActor {
         ).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
     }
       ).foldLeft[JsCmd](JsCmds.Noop)(_ & _) &
-            JE.JsRaw("document.getElementById('player" + winner.id + "name').setAttribute('class','playernamewinner')").cmd &
+            showWinner(winner) &
             updatePlayers(users)
+  }
+
+  def showWinner(winner: Player): JsCmd = {
+    JE.JsRaw("document.getElementById('player" + winner.id + "name').setAttribute('class','playernamewinner')").cmd &
+            JqSetHtml("winner", Text(winner.playername+" wins with "+winner.handrank.getRank.toString)) & JsCmds.JsShowId("winner")
   }
 
   def showAllMoney(money: Int): JsCmd = {
