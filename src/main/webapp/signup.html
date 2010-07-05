@@ -1,0 +1,75 @@
+<lift:surround with="default" at="content">
+   <head>
+       <link rel="stylesheet" type="text/css" href="styles/style.css" />
+   </head>
+    <div id="pool">
+        <img src="images/pool.png" width="700" alt="Pool"/>
+    </div>
+    <div id="palme">
+        <img src="images/palme.png" alt="Palme"/>
+    </div>
+    <div id="chat">
+        <div id="chatmessages"/>
+        <lift:Chat form="Post">
+            <chat:message id="message" class="inputtext"/>
+            <chat:submit class="inputsubmit"/>
+        </lift:Chat>
+    </div>
+    <lift:comet type="Player">
+        <div id="table">
+            <div id="player1">
+                <div id="player1countdown"></div>
+                <div id="player1name" class="playername">
+                    <comet:player1name/>
+                </div>
+                <div id="player1card1" class="card"></div>
+                <div id="player1card2" class="card"></div>
+                <div id="player1money"></div>
+                <div id="player1action"></div>
+            </div>
+            <div id="player2">
+                <div id="player2countdown"></div>
+                <div id="player2name" class="playername">
+                    <comet:player2name/>
+                </div>
+                <div id="player2card1" class="card"></div>
+                <div id="player2card2" class="card"></div>
+                <div id="player2money"></div>
+                <div id="player2action"></div>
+            </div>
+            <div id="player3">
+                <div id="player3countdown"></div>
+                <div id="player3name" class="playername">
+                    <comet:player3name/>
+                </div>
+                <div id="player3card1" class="card"></div>
+                <div id="player3card2" class="card"></div>
+                <div id="player3money"></div>
+                <div id="player3action"></div>
+            </div>
+            <div id="player4">
+                <div id="player4countdown"></div>
+                <div id="player4name" class="playername">
+                    <comet:player4name/>
+                </div>
+                <div id="player4card1" class="card"></div>
+                <div id="player4card2" class="card"></div>
+                <div id="player4money"></div>
+                <div id="player4action"></div>
+            </div>
+
+            <div id="tablecards">
+                <div id="flop1" class="card"></div>
+                <div id="flop2" class="card"></div>
+                <div id="flop3" class="card"></div>
+                <div id="turn" class="card"></div>
+                <div id="river" class="card"></div>
+            </div>
+
+            <div id="countdown"></div>
+            <div id="allmoney"></div>
+        </div>
+    </lift:comet>
+
+</lift:surround>
+

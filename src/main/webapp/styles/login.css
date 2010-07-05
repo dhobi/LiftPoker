@@ -1,0 +1,53 @@
+html, body {
+    margin:0;
+    padding:0;
+    background-image: url('../images/background.jpg');
+    text-align:center;
+
+    font-family: Arial;
+    color:#e6ffdc;
+}
+
+#lift_logo {
+    margin:auto;
+}
+
+#table_login {
+    background-image: url('../images/table_login.png');
+    background-repeat:no-repeat;
+    width:750px;
+    height:488px;
+    margin:auto;
+
+}
+
+#lift_description {
+    padding-top:100px;
+    font-size:10px;
+}
+
+#login_form {
+    padding-top:220px;
+}
+
+a {
+    text-decoration:underline;
+    color: #e6ffdc;
+}
+
+.inputtext {
+    width:300px;
+    font-size:15px;
+    height:30px;
+    background-color:#118603;
+    border: 1px solid white;
+    color: #e6ffdc;
+}
+
+.inputsubmit {
+    font-size:12px;
+    height:30px;
+    background-color:#118603;
+    border: 1px solid white;
+    color: #e6ffdc;
+}

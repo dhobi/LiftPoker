@@ -1,0 +1,26 @@
+<lift:surround with="default" at="content">
+    <head>
+        <link rel="stylesheet" type="text/css" href="styles/login.css"/>
+    </head>
+
+    <div id="lift_logo">
+        <img src="images/lift_transparent.png" alt="Lift Logo"/>
+    </div>
+    <div id="table_login">
+
+        <div id="login_form">
+            Please give in your username to play LiftPoker:<br/><br/>
+            <lift:Signup form="POST">
+                <s:name class="inputtext"/>
+                <s:submit class="inputsubmit"/>
+            </lift:Signup>
+        </div>
+        <div id="lift_description">
+            Lift is an expressive and elegant framework for writing<br/>
+            web applications. Lift stresses [<a href="http://www.liftweb.net" target="_blank">more...</a>]
+        </div>
+    </div>
+
+
+</lift:surround>
+
