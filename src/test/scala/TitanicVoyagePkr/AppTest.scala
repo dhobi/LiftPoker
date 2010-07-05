@@ -6,6 +6,8 @@ import Assert._
 import _root_.scala.xml.XML
 import _root_.net.liftweb.util._
 import _root_.net.liftweb.common._
+import com.sampullara.poker.{Card, HandRank, Cards}
+import java.util.Collections
 
 object AppTest {
   def suite: Test = {
@@ -28,6 +30,33 @@ class AppTest extends TestCase("app") {
    */
   def testOK() = assertTrue(true)
   // def testKO() = assertTrue(false);
+
+  def testHand() = {
+    var cards = new Cards(5)
+    cards.add(new model.Card("h",3).getJavaCard)
+    cards.add(new model.Card("h",5).getJavaCard)
+    cards.add(new model.Card("kr",6).getJavaCard)
+    cards.add(new model.Card("h",4).getJavaCard)
+    cards.add(new model.Card("h",2).getJavaCard)
+    Collections.sort(cards)
+    Collections.reverse(cards)
+
+    var hr = new HandRank(cards)
+    println(getStraight1)
+    assertEquals(HandRank.Rank.STRAIGHT,getStraight1.getRank)
+    println(hr)
+    assertEquals(HandRank.Rank.STRAIGHT,hr.getRank)
+  }
+
+  def getStraight1 : HandRank = {
+        var cards = new Cards(5);
+        cards.add(new Card(Card.Rank.SIX, Card.Suit.HEARTS));
+        cards.add(new Card(Card.Rank.FIVE, Card.Suit.HEARTS));
+        cards.add(new Card(Card.Rank.FOUR, Card.Suit.CLUBS));
+        cards.add(new Card(Card.Rank.THREE, Card.Suit.HEARTS));
+        cards.add(new Card(Card.Rank.TWO, Card.Suit.HEARTS));
+       new HandRank(cards);
+    }
 
   /**
    * Tests to make sure the project's XML files are well-formed.

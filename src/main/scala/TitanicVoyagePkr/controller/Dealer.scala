@@ -8,6 +8,7 @@ import net.liftweb.util.ActorPing
 import net.liftweb.util.Helpers._
 import TitanicVoyagePkr.model.{Card, Poker}
 import com.sampullara.poker.{HandRank, Cards}
+import java.util.Collections
 
 /**
  * Created by IntelliJ IDEA.
@@ -181,6 +182,10 @@ class Dealer {
       Table.table.turn.foreach((c: Card) => cards.add(c.getJavaCard))
       Table.table.river.foreach((c: Card) => cards.add(c.getJavaCard))
 
+      //If just someone told me that the cards has to be sorted and reversed to be evaluated correctly
+      Collections.sort(cards)
+      Collections.reverse(cards)
+
       user.setHandRank(new HandRank(cards))
 
 
@@ -194,16 +199,16 @@ class Dealer {
     player.usedMoney = player.usedMoney + money
   }
 
-  def moveDealer : Unit = {
+  def moveDealer: Unit = {
     dealer = (dealer + 1) % (allUsers.values.toList.sort(_.id > _.id).first.id + 1)
-    if(!allUsers.isDefinedAt(dealer)) {
+    if (!allUsers.isDefinedAt(dealer)) {
       moveDealer
     }
   }
 
-  def movePlayer : Unit = {
-    position = (position + 1) % (allUsers.values.toList.sort(_.id > _.id).first.id +1)
-    if(!allUsers.isDefinedAt(position)) {
+  def movePlayer: Unit = {
+    position = (position + 1) % (allUsers.values.toList.sort(_.id > _.id).first.id + 1)
+    if (!allUsers.isDefinedAt(position)) {
       movePlayer
     }
   }
