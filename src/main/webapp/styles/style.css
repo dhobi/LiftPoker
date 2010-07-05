@@ -151,7 +151,7 @@ html,body {
 
 #chat {
  position:absolute;
- top:160px;
+ top:140px;
  left:10px;
 }
 
@@ -165,6 +165,26 @@ html,body {
     background-image: url('../images/chatbackground.png');
     color:  #f4ed85;
     margin-bottom:5px;
+
+}
+
+#status_chat {
+ position:absolute;
+ top:140px;
+ left:850px;
+}
+
+#status_chatmessages {
+    width:400px;
+    height:200px;
+    overflow:auto;
+    font-size:10px;
+    padding:2px;
+    border:1px solid #FFFFFF;
+    background-image: url('../images/chatbackground.png');
+    color:  #FFFFFF;
+    margin-bottom:5px;
+    font-style:italic;
 
 }
 

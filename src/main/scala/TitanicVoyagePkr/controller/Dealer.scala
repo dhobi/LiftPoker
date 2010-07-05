@@ -52,12 +52,14 @@ class Dealer {
 
   def startGame = {
     if (!isStarting && allUsers.size >= 2) {
+      Table.table.sendStatusMessage("####### New hand in 5 seconds...#######<br/>")
       Table.table ! Countdown()
       isStarting = true
     }
   }
 
   def reset = {
+    Table.table.sendStatusMessage("####### End of this hand #######<br/><br/>")
     hasStarted = false;
     isStarting = false;
     position = dealer;
@@ -114,11 +116,13 @@ class Dealer {
     player.satisfied = true
     var amount = Table.table.getHighestRoundMoney.get - player.usedMoney
     Table.table ! SetMoney(player, amount)
+    Table.table.sendStatusMessage(player.playername+" calls")
     checkStep
   }
 
   def check(player: Player) = {
     player.satisfied = true
+    Table.table.sendStatusMessage(player.playername+" checks")
     checkStep
   }
 
@@ -131,6 +135,14 @@ class Dealer {
     var plus = Table.table.getHighestRoundMoney.get + amount - player.usedMoney
 
     Table.table ! SetMoney(player, plus)
+
+    if (Table.table.getHighestRoundMoney.get == 0) {
+      Table.table.sendStatusMessage(player.playername+" bets "+plus)
+    } else {
+      Table.table.sendStatusMessage(player.playername+" raises to "+(Table.table.getHighestRoundMoney.get + amount))
+    }
+
+
     checkStep
   }
 
@@ -138,12 +150,14 @@ class Dealer {
     //remove in active list
     player.satisfied = true
     player.fold = true
+    Table.table.sendStatusMessage(player.playername+" folds")
     checkStep
 
   }
 
   def timeout(player: Player) = {
     //Player is gone anyway...
+    Table.table.sendMessage(player.playername,"has left the table")
     checkStep
   }
 
@@ -190,7 +204,9 @@ class Dealer {
 
 
     })
-    getActivePlayers.sort((p1, p2) => p1.handrank.compareTo(p2.handrank) < 0).last
+    var winner = getActivePlayers.sort((p1, p2) => p1.handrank.compareTo(p2.handrank) < 0).last
+    Table.table.sendStatusMessage(winner.playername+" wins with "+winner.handrank)
+    winner
 
   }
 

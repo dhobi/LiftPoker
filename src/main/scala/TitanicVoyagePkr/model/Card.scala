@@ -33,6 +33,6 @@ class Card(c : String, v : int) {
     var num = Array("1","2","3","4","5","6","7","8","9","t","j","q","k","a")
     var convert = Map("h"->"h","ka"->"d","kr"->"c","p"->"s")
 
-    new  com.sampullara.poker.Card(Card.Rank.parse(num(value-1)),Card.Suit.parse(convert.get(color).get))
+    new  com.sampullara.poker.Card(Card.Rank.parse(num(value)),Card.Suit.parse(convert.get(color).get))
   }
 }

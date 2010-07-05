@@ -134,6 +134,9 @@ class Player extends CometActor {
     case ShowMessage(player: String, str: String) => {
       partialUpdate(JsRaw(";document.getElementById('chatmessages').innerHTML += '" + player + ": " + str.replace("&", "&amp;").replace("'", "&#39;") + "<br/>';document.getElementById('chatmessages').scrollTop = document.getElementById('chatmessages').scrollHeight;").cmd)
     }
+    case ShowStatusMessage(message: String) => {
+      partialUpdate(JsRaw(";document.getElementById('status_chatmessages').innerHTML += '"+message+"<br/>';document.getElementById('status_chatmessages').scrollTop = document.getElementById('status_chatmessages').scrollHeight;").cmd)
+    }
   }
 
   def clearNames: JsCmd = {
@@ -158,7 +161,7 @@ class Player extends CometActor {
       user.getCards.map(card => {
         cardid = cardid + 1
         var img = "images/deckblatt.png"
-        if (user.playername.equals(this.playername)) {
+        if (user.id == this.id) {
           img = card.getImage
         }
         JqSetHtml("player" + user.id + "card" + cardid, <img src={img} alt=" "/>)

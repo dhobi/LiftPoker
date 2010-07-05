@@ -133,6 +133,7 @@ class Table extends LiftActor {
 
         flop = cardstack.getCards(3)
         tablewatchers.foreach(_ ! ShowFlop(flop))
+        sendStatusMessage("Flop: "+flop.map(c=> c.getJavaCard.toString).foldRight[String]("")(_ +","+ _))
         updateAllMoney
 
         dealer.waitingForAction
@@ -143,6 +144,7 @@ class Table extends LiftActor {
 
         turn = cardstack.getCards(1)
         tablewatchers.foreach(_ ! ShowTurn(turn))
+        sendStatusMessage("Turn: "+turn.firstOption.get.getJavaCard.toString)
         updateAllMoney
         dealer.waitingForAction
       }
@@ -152,6 +154,7 @@ class Table extends LiftActor {
         
         river = cardstack.getCards(1)
         tablewatchers.foreach(_ ! ShowRiver(river))
+        sendStatusMessage("River: "+river.firstOption.get.getJavaCard.toString)
         updateAllMoney
         dealer.waitingForAction
       }
@@ -165,7 +168,7 @@ class Table extends LiftActor {
         resetGame
       }
       case SendMessage(player:String,str : String) => {
-        tablewatchers.foreach(_ ! ShowMessage(player,str))
+         sendMessage(player,str)
       }
       case _ =>
     }
@@ -180,6 +183,14 @@ class Table extends LiftActor {
 
   def updateAllMoney = {
     tablewatchers.foreach(_ ! ShowAllMoney(tableplayers.values.toList,allPlayedMoney))
+  }
+
+  def sendMessage(player:String,str:String) = {
+    tablewatchers.foreach(_ ! ShowMessage(player,str))
+  }
+
+  def sendStatusMessage(message: String) = {
+     tablewatchers.foreach(_ ! ShowStatusMessage(message))
   }
 
   def timeoutPlayer(player : Player) = {
@@ -247,6 +258,7 @@ case class ShowAllMoney(players: List[Player],money:Int)
 
 case class SendMessage(player: String,str:String)
 case class ShowMessage(player: String,str:String)
+case class ShowStatusMessage(message: String)
 
 object Table {
   lazy val table = new Table
