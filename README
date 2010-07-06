@@ -1,9 +1,16 @@
 LiftPoker is an experimental poker app written in Scala/Lift.
 
+You want to play?
+Here you go: http://poker.dhobi.staxapps.net/
+
+You want to clone the repository and play LiftPoker locally?
+Follow the next few steps to make it running.
+
+Note:
 LiftPoker uses a free poker library (Java) to evaluate the hands:
 http://code.google.com/p/pokerengine/
 
-######## Please install the poker library to your local maven repository ########
+######## Please install this poker library to your local maven repository ########
 
 1. pom.xml is already pointing to this library:
 <dependency>
@@ -17,3 +24,11 @@ http://code.google.com/p/pokerengine/
 3. open a console, change to the directory where you downloaded the library and type the following command:
     mvn install:install-file -Dfile=bench-13.jar -DgroupId=ch.local \
     -DartifactId=poker -Dversion=1.0
+
+########
+
+
+Please leave me a note if you think that...
+- you know a better hand evaluating library
+- you have found a bug (or two)
+- you should become a collaborator
