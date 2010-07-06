@@ -1,0 +1,19 @@
+LiftPoker is an experimental poker app written in Scala/Lift.
+
+LiftPoker uses a free poker library (Java) to evaluate the hands:
+http://code.google.com/p/pokerengine/
+
+######## Please install the poker library to your local maven repository ########
+
+1. pom.xml is already pointing to this library:
+<dependency>
+    <groupId>ch.local</groupId>
+    <artifactId>poker</artifactId>
+    <version>1.0</version>
+</dependency>
+
+2. download bench-13.jar from http://code.google.com/p/pokerengine/downloads/list
+
+3. open a console, change to the directory where you downloaded the library and type the following command:
+    mvn install:install-file -Dfile=bench-13.jar -DgroupId=ch.local \
+    -DartifactId=poker -Dversion=1.0
