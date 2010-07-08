@@ -6,6 +6,8 @@ import TitanicVoyagePkr.comet.Player
 import net.liftweb.util.ActorPing
 import net.liftweb.util.Helpers._
 import TitanicVoyagePkr.model._
+import net.liftweb.http.{TemplateFinder, S}
+import xml.Text
 
 /**
  * Created by IntelliJ IDEA.
@@ -16,33 +18,69 @@ import TitanicVoyagePkr.model._
  */
 
 class Table extends LiftActor {
-  private var tablewatchers: List[Player] = List()
-  private var tableplayers: Map[int, Player] = Map()
-  private var money : List[Money] = List()
-  private var roundmoney : Map[Player,Money] = Map()
-  private var cardstack = new CardStack()
-  private val dealer = new Dealer
-  private val size = 4
+  protected val id = 1
+  protected val name = "Lift Poker"
+
+  protected var tablewatchers: List[Player] = List()
+  protected var tableplayers: Map[int, Player] = Map()
+  protected var interrupted = true
+  protected var money: List[Money] = List()
+  protected var roundmoney: Map[Player, Money] = Map()
+  protected var cardstack = new CardStack()
+  protected val dealer = new Dealer(this)
+  protected val size = 4
+  protected val tobind = TemplateFinder.findAnyTemplate("tables/table" + size :: Nil)
+
 
   var flop: List[Card] = List()
   var turn: List[Card] = List()
   var river: List[Card] = List()
 
-  private val smallblind = 1
-  private val bigblind = 2
+  protected val smallblind = 1
+  protected val bigblind = 2
+  protected val raiseAmount = 4
 
+  def getId = {
+    id
+  }
 
   def getPlayers = {
     tableplayers
   }
 
+  def getSize = {
+    size
+  }
+
+  def getName = {
+    name
+  }
+
+  def getXML = {
+    tobind.openOr(Text("Not found"))
+  }
+
+  def getBigBlind = {
+    bigblind
+  }
+
+  def getSmallBlind = {
+    smallblind
+  }
+
+  def getRaiseAmount = {
+    raiseAmount
+  }
+
   protected def messageHandler =
     {
       case AddWatcher(me) => {
-        tablewatchers = tablewatchers ::: List(me)
+        if (!tablewatchers.find(p => p.id == me.id).isDefined) {
+          tablewatchers = tablewatchers ::: List(me)
+        }
       }
-      case AddPlayerToTable(me,seat) => {
-        if(!tableplayers.isDefinedAt(seat)) {
+      case AddPlayerToTable(me, seat) => {
+        if (!tableplayers.isDefinedAt(seat)) {
           me.id = seat
           tableplayers ++= List(me.id -> me)
           updatePlayers
@@ -52,21 +90,33 @@ class Table extends LiftActor {
         }
       }
       case RemoveWatcher(me) => {
-         tablewatchers = tablewatchers.filter(p=> p.id != me.id)
+        tablewatchers = tablewatchers.filter(p => p.id != me.id)
+
+      }
+      case RemovePlayer(me) => {
          tableplayers -= me.id
+
         //Tell dealer
         dealer.removeUser(me)
+        me.id = 0
+        me.resetGame
+
+        updatePlayers
       }
       case Countdown() => {
         ActorPing.schedule(this, Seconds(5), 1000L)
+        interrupted = false
       }
       case Seconds(s: int) => {
-        if (s != 0) {
-          ActorPing.schedule(this, Seconds(s - 1), 1000L)
-          tableplayers.values.foreach(_ ! Seconds(s))
-        } else {
-          tableplayers.values.foreach(_ ! Seconds(s))
-          dealer.dealCards
+        if (!interrupted) {
+
+          if (s != 0) {
+            ActorPing.schedule(this, Seconds(s - 1), 1000L)
+            tableplayers.values.foreach(_ ! Seconds(s))
+          } else {
+            tableplayers.values.foreach(_ ! Seconds(s))
+            dealer.dealCards
+          }
         }
       }
       case DealCards() => {
@@ -74,32 +124,38 @@ class Table extends LiftActor {
         updateCards
       }
       case SmallBlind(player: Player) => {
-        money = money ::: List(new Money(smallblind))
-        roundmoney ++= List(player->new Money(smallblind))
+        if (!interrupted) {
+          money = money ::: List(new Money(smallblind))
+          roundmoney ++= List(player -> new Money(smallblind))
 
-        dealer.updateMoney(player,smallblind)
+          dealer.updateMoney(player, smallblind)
 
-        tablewatchers.foreach(_ ! PutSmallBlind(player, smallblind))
+          tablewatchers.foreach(_ ! PutSmallBlind(player, smallblind))
+        }
       }
       case BigBlind(player: Player) => {
-        money = money ::: List(new Money(bigblind))
-        roundmoney ++= List(player->new Money(bigblind))
+        if (!interrupted) {
+          money = money ::: List(new Money(bigblind))
+          roundmoney ++= List(player -> new Money(bigblind))
 
-        dealer.updateMoney(player,bigblind)
+          dealer.updateMoney(player, bigblind)
 
-        tablewatchers.foreach(_ ! PutBigBlind(player, bigblind))
+          tablewatchers.foreach(_ ! PutBigBlind(player, bigblind))
+        }
       }
       case SetMoney(player: Player, money: int) => {
 
-        dealer.updateMoney(player,money)
+        dealer.updateMoney(player, money)
 
         this.money = this.money ::: List(new Money(money))
-        roundmoney ++= List(player->new Money(player.usedMoney))
+        roundmoney ++= List(player -> new Money(player.usedMoney))
 
         tablewatchers.foreach(_ ! SetMoney(player, player.usedMoney))
       }
       case WaitForAction(players: List[Player], player: Player) => {
-        tablewatchers.foreach(_ ! PutWait(players, player))
+        if(!interrupted) {
+          tablewatchers.foreach(_ ! PutWait(players, player))
+        }
       }
       case Fold(player: Player) => {
         tablewatchers.foreach(_ ! StopCountdown())
@@ -115,60 +171,52 @@ class Table extends LiftActor {
         tablewatchers.foreach(_ ! StopCountdown())
         dealer.check(player)
       }
-      case Raise(player:Player) => {
+      case Raise(player: Player) => {
         tablewatchers.foreach(_ ! StopCountdown())
         dealer.raise(player)
       }
-      case TimeOut(player:Player) => {
-        timeoutPlayer(player)
-        dealer.timeout(player)
-        //tablewatchers.foreach(_ ! Fold(player))
-        updatePlayers
-        player.reRender(true)
-
-      }
       case Flop() => {
         roundmoney = Map()
-        tableplayers.values.foreach(p=> p.usedMoney = 0)
+        tableplayers.values.foreach(p => p.usedMoney = 0)
 
         flop = cardstack.getCards(3)
         tablewatchers.foreach(_ ! ShowFlop(flop))
-        sendStatusMessage("Flop: "+flop.map(c=> c.getJavaCard.toString).foldRight[String]("")(_ +","+ _))
+        sendStatusMessage("Flop: " + flop.map(c => c.getJavaCard.toString).foldRight[String]("")(_ + "," + _))
         updateAllMoney
 
         dealer.waitingForAction
       }
       case Turn() => {
         roundmoney = Map()
-        tableplayers.values.foreach(p=> p.usedMoney = 0)
+        tableplayers.values.foreach(p => p.usedMoney = 0)
 
         turn = cardstack.getCards(1)
         tablewatchers.foreach(_ ! ShowTurn(turn))
-        sendStatusMessage("Turn: "+turn.firstOption.get.getJavaCard.toString)
+        sendStatusMessage("Turn: " + turn.firstOption.get.getJavaCard.toString)
         updateAllMoney
         dealer.waitingForAction
       }
       case River() => {
         roundmoney = Map()
-        tableplayers.values.foreach(p=> p.usedMoney = 0)
-        
+        tableplayers.values.foreach(p => p.usedMoney = 0)
+
         river = cardstack.getCards(1)
         tablewatchers.foreach(_ ! ShowRiver(river))
-        sendStatusMessage("River: "+river.firstOption.get.getJavaCard.toString)
+        sendStatusMessage("River: " + river.firstOption.get.getJavaCard.toString)
         updateAllMoney
         dealer.waitingForAction
       }
       case ShowDown() => {
         var winner = dealer.showdown
         winner.money.add(allPlayedMoney)
-        tablewatchers.foreach(_ ! ShowShowDown(tableplayers.values.toList,winner))
+        tablewatchers.foreach(_ ! ShowShowDown(tableplayers.values.toList, winner))
         ActorPing.schedule(this, ResetGame(), 10000L)
       }
       case ResetGame() => {
         resetGame
       }
-      case SendMessage(player:String,str : String) => {
-         sendMessage(player,str)
+      case SendMessage(player: String, str: String) => {
+        sendMessage(player, str)
       }
       case _ =>
     }
@@ -182,22 +230,15 @@ class Table extends LiftActor {
   }
 
   def updateAllMoney = {
-    tablewatchers.foreach(_ ! ShowAllMoney(tableplayers.values.toList,allPlayedMoney))
+    tablewatchers.foreach(_ ! ShowAllMoney(tableplayers.values.toList, allPlayedMoney))
   }
 
-  def sendMessage(player:String,str:String) = {
-    tablewatchers.foreach(_ ! ShowMessage(player,str))
+  def sendMessage(player: String, str: String) = {
+    tablewatchers.foreach(_ ! ShowMessage(player, str))
   }
 
   def sendStatusMessage(message: String) = {
-     tablewatchers.foreach(_ ! ShowStatusMessage(message))
-  }
-
-  def timeoutPlayer(player : Player) = {
-    tableplayers -= player.id
-    //Tell dealer
-    dealer.removeUser(player)
-    player.id = 0
+    tablewatchers.foreach(_ ! ShowStatusMessage(message))
   }
 
   def getHighestRoundMoney = {
@@ -209,6 +250,7 @@ class Table extends LiftActor {
   }
 
   def resetGame() = {
+    interrupted = true
     flop = List()
     turn = null
     river = null
@@ -225,6 +267,7 @@ case class Seconds(s: int)
 
 case class AddWatcher(actor: Player)
 case class RemoveWatcher(actor: Player)
+case class RemovePlayer(actor: Player)
 case class AddPlayerToTable(actor: Player, seat: Int)
 case class AddPlayers(players: List[Player])
 
@@ -241,7 +284,6 @@ case class PutBigBlind(player: Player, money: int)
 case class WaitForAction(players: List[Player], player: Player)
 case class PutWait(players: List[Player], player: Player)
 case class ResetGame()
-case class TimeOut(player:Player)
 case class StopCountdown()
 
 case class Fold(player: Player)
@@ -254,10 +296,10 @@ case class ShowTurn(cards: List[Card])
 case class ShowRiver(cards: List[Card])
 case class ShowShowDown(players: List[Player], winner: Player)
 
-case class ShowAllMoney(players: List[Player],money:Int)
+case class ShowAllMoney(players: List[Player], money: Int)
 
-case class SendMessage(player: String,str:String)
-case class ShowMessage(player: String,str:String)
+case class SendMessage(player: String, str: String)
+case class ShowMessage(player: String, str: String)
 case class ShowStatusMessage(message: String)
 
 object Table {

@@ -1,7 +1,6 @@
 package TitanicVoyagePkr.comet
 
 import net.liftweb.http.js.jquery.JqJsCmds.JqSetHtml
-import TitanicVoyagePkr.snippet.currentUser
 import net.liftweb.http.{SHtml, CometActor}
 import net.liftweb.http.js.{JE, JsCmds, JsCommands, JsCmd}
 import TitanicVoyagePkr.controller._
@@ -14,6 +13,7 @@ import java.util.concurrent.ScheduledFuture
 import net.liftweb.util.Helpers._
 import net.liftweb.http.js.JE.{Str, JsVal, JsRaw}
 import net.liftweb.http.js.JsCommands._
+import TitanicVoyagePkr.snippet.{currentTable, currentUser}
 
 /**
  * Created by IntelliJ IDEA.
@@ -26,12 +26,16 @@ import net.liftweb.http.js.JsCommands._
 class Player extends CometActor {
   var id: Int = 0
   var playername: String = currentUser.is
+  var table: Table = currentTable.is
+
   var cards: List[Card] = List()
   var fold = false
   var satisfied = false
   var handrank: HandRank = _
   val money = new Money(500)
   var usedMoney = 0
+
+
 
   var future: ScheduledFuture[Unit] = null
 
@@ -53,12 +57,15 @@ class Player extends CometActor {
 
   override def render() = {
 
-    var message = ""
+    table = currentTable.is
+    playername = currentUser.is
 
-    Table.table.updatePlayers
-    Table.table.updateCards
+    table.updatePlayers
+    table.updateCards
 
-    bind("comet", defaultXml,
+    table ! AddWatcher(this)
+
+    bind("comet", table.getXML,
       "player1name" -> getPlayerName(1),
       "player2name" -> getPlayerName(2),
       "player3name" -> getPlayerName(3),
@@ -68,20 +75,20 @@ class Player extends CometActor {
   }
 
   def getPlayerName(i: int): NodeSeq = {
-    if (Table.table.getPlayers.isDefinedAt(i)) {
-      Text(Table.table.getPlayers.get(i).get.playername)
+    if (table.getPlayers.isDefinedAt(i)) {
+      Text(table.getPlayers.get(i).get.playername)
     } else {
-      SHtml.a(() => {Table.table ! AddPlayerToTable(this, i); clearNames; }, Text("Sit down"))
+      SHtml.a(() => {table ! AddPlayerToTable(this, i); clearNames; }, Text("Sit down"))
     }
   }
 
   override def localSetup {
-    Table.table ! AddWatcher(this)
     super.localSetup
   }
 
   override def localShutdown {
-    Table.table ! RemoveWatcher(this)
+    table ! RemoveWatcher(this)
+    table ! RemovePlayer(this)
     super.localShutdown
   }
 
@@ -135,22 +142,34 @@ class Player extends CometActor {
       partialUpdate(JsRaw(";document.getElementById('chatmessages').innerHTML += '" + player + ": " + str.replace("&", "&amp;").replace("'", "&#39;") + "<br/>';document.getElementById('chatmessages').scrollTop = document.getElementById('chatmessages').scrollHeight;").cmd)
     }
     case ShowStatusMessage(message: String) => {
-      partialUpdate(JsRaw(";document.getElementById('status_chatmessages').innerHTML += '"+message+"<br/>';document.getElementById('status_chatmessages').scrollTop = document.getElementById('status_chatmessages').scrollHeight;").cmd)
+      partialUpdate(JsRaw(";document.getElementById('status_chatmessages').innerHTML += '" + message + "<br/>';document.getElementById('status_chatmessages').scrollTop = document.getElementById('status_chatmessages').scrollHeight;").cmd)
     }
   }
 
   def clearNames: JsCmd = {
-    (1 to 4).map(i => {
+    (1 to table.getSize).map(i => {
       var html: NodeSeq = Text("")
       if (id == 0) {
-        html = SHtml.a(() => {Table.table ! AddPlayerToTable(this, i); clearNames; }, Text("Sit down"))
+        html = SHtml.a(() => {table ! AddPlayerToTable(this, i); clearNames; }, Text("Sit down"))
       }
       JqSetHtml("player" + i + "name", html)
     }).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
   }
 
   def updatePlayers(users: List[Player]): JsCmd = {
-    clearNames & users.map(user => JqSetHtml("player" + user.id + "name", Text(user.playername) ++ <span style="margin-left:20px;">{user.money.get}</span>)).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
+    clearNames & users.map(user => JqSetHtml("player" + user.id + "name", Text(user.playername) ++ <span style="margin-left:20px;">
+      {user.money.get}
+    </span> ++ showExit(user))).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
+  }
+
+  def showExit(user: Player) = {
+    if (this.id == user.id) {
+      <span style="margin-left:20px;">
+        {SHtml.a(() => {table ! RemovePlayer(this); currentTable(null); resetGame; JsCmds.RedirectTo("/"); }, Text("x"))}
+      </span>
+    } else {
+      <span style="margin-left:20px;"></span>
+    }
   }
 
 
@@ -191,7 +210,7 @@ class Player extends CometActor {
   }
 
   def clearNamePlates: JsCmd = {
-    (1 to 4).map(i => JE.JsRaw("document.getElementById('player" + i + "name').setAttribute('class','playername')").cmd).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
+    (1 to table.getSize).map(i => JE.JsRaw("document.getElementById('player" + i + "name').setAttribute('class','playername')").cmd).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
   }
 
   def setCountdown(s: int) = {
@@ -212,19 +231,19 @@ class Player extends CometActor {
     if (player.id == this.id) {
 
       //setTimeout
-      future = ActorPing.schedule(Table.table, TimeOut(this), 35000L)
+      future = ActorPing.schedule(table, RemovePlayer(this), 35000L)
 
-      html = SHtml.a(() => {Table.table ! Fold(this); future.cancel(true); hideActionForm}, <span class="action">Fold</span>)
-      if (usedMoney == Table.table.getHighestRoundMoney.get) {
-        html = html ++ SHtml.a(() => {Table.table ! Check(this); future.cancel(true); hideActionForm}, <span class="action">Check</span>)
-      } else if (usedMoney < Table.table.getHighestRoundMoney.get) {
-        html = html ++ SHtml.a(() => {Table.table ! Call(this); future.cancel(true); hideActionForm}, <span class="action">Call</span>)
+      html = SHtml.a(() => {table ! Fold(this); future.cancel(true); hideActionForm}, <span class="action">Fold</span>)
+      if (usedMoney == table.getHighestRoundMoney.get) {
+        html = html ++ SHtml.a(() => {table ! Check(this); future.cancel(true); hideActionForm}, <span class="action">Check</span>)
+      } else if (usedMoney < table.getHighestRoundMoney.get) {
+        html = html ++ SHtml.a(() => {table ! Call(this); future.cancel(true); hideActionForm}, <span class="action">Call</span>)
       }
 
-      if (Table.table.getHighestRoundMoney.get == 0) {
-        html = html ++ SHtml.a(() => {Table.table ! Raise(this); future.cancel(true); hideActionForm}, <span class="action">Bet</span>)
+      if (table.getHighestRoundMoney.get == 0) {
+        html = html ++ SHtml.a(() => {table ! Raise(this); future.cancel(true); hideActionForm}, <span class="action">Bet</span>)
       } else {
-        html = html ++ SHtml.a(() => {Table.table ! Raise(this); future.cancel(true); hideActionForm}, <span class="action">Raise</span>)
+        html = html ++ SHtml.a(() => {table ! Raise(this); future.cancel(true); hideActionForm}, <span class="action">Raise</span>)
       }
 
     }
@@ -250,6 +269,9 @@ class Player extends CometActor {
     handrank = null
     usedMoney = 0
     satisfied = false
+    if (future != null) {
+      future.cancel(true);
+    }
 
     JqSetHtml("player1card1", Text("")) & JqSetHtml("player1card2", Text("")) &
             JqSetHtml("player2card1", Text("")) & JqSetHtml("player2card2", Text("")) &
@@ -269,7 +291,9 @@ class Player extends CometActor {
             JqSetHtml("turn", Text("")) &
             JqSetHtml("river", Text("")) &
             JsCmds.JsHideId("allmoney") &
-            JsCmds.JsHideId("winner")
+            JsCmds.JsHideId("winner") &
+            JsRaw("countdown.stop();").cmd &
+            hideActionForm
   }
 
   def showFlop(cards: List[Card]): JsCmd = {
@@ -309,7 +333,7 @@ class Player extends CometActor {
 
   def showWinner(winner: Player): JsCmd = {
     JE.JsRaw("document.getElementById('player" + winner.id + "name').setAttribute('class','playernamewinner')").cmd &
-            JqSetHtml("winner", Text(winner.playername+" wins with "+winner.handrank.getRank.toString)) & JsCmds.JsShowId("winner")
+            JqSetHtml("winner", Text(winner.playername + " wins with " + winner.handrank.getRank.toString)) & JsCmds.JsShowId("winner")
   }
 
   def showAllMoney(money: Int): JsCmd = {

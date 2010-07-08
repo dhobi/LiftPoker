@@ -18,7 +18,7 @@ import java.util.Collections
  * To change this template use File | Settings | File Templates.
  */
 
-class Dealer {
+class Dealer(fromTable : Table) {
   private val poker = new Poker
 
   var hasStarted = false
@@ -28,7 +28,11 @@ class Dealer {
   private var position = 0
   private var dealer = 0
 
+  private var table : Table = fromTable
+
   def addUser(user: Player) = {
+
+    table.sendMessage(user.playername,"has joined the table")
     if (hasStarted) {
       waitingUsers ++= List((user.id - 1) -> user)
     } else {
@@ -41,25 +45,38 @@ class Dealer {
     if (allUsers.size >= 2 && !hasStarted) {
       startGame
     } else if (hasStarted) {
-      Table.table.updateCards
+      table.updateCards
     }
   }
 
   def removeUser(user: Player) = {
     allUsers -= (user.id - 1)
     waitingUsers -= (user.id - 1)
+
+    table.sendMessage(user.playername,"has left the table")
+
+    if(user.id == getPlayer.id) {
+      checkStep
+    }
+
+    if(onlyOnePlayerLeft) {
+      getActivePlayers.first.money.add(table.allPlayedMoney)
+      table.updatePlayers
+      table ! ResetGame()
+    }
+
   }
 
   def startGame = {
     if (!isStarting && allUsers.size >= 2) {
-      Table.table.sendStatusMessage("####### New hand in 5 seconds...#######<br/>")
-      Table.table ! Countdown()
+      table.sendStatusMessage("####### New hand in 5 seconds...#######<br/>")
+      table ! Countdown()
       isStarting = true
     }
   }
 
   def reset = {
-    Table.table.sendStatusMessage("####### End of this hand #######<br/><br/>")
+    table.sendStatusMessage("####### End of this hand #######<br/><br/>")
     hasStarted = false;
     isStarting = false;
     position = dealer;
@@ -73,24 +90,24 @@ class Dealer {
     hasStarted = true
     poker.activeRound = 0
     isStarting = false;
-    Table.table ! DealCards()
+    table ! DealCards()
     setBlinds
 
   }
 
   def setBlinds = {
 
-    ActorPing.schedule(Table.table, SmallBlind(getPlayer), 1000L)
+    ActorPing.schedule(table, SmallBlind(getPlayer), 1000L)
     movePlayer
-    ActorPing.schedule(Table.table, BigBlind(getPlayer), 2000L)
+    ActorPing.schedule(table, BigBlind(getPlayer), 2000L)
     movePlayer
 
-    ActorPing.schedule(Table.table, WaitForAction(allUsers.values.toList, getPlayer), 3000L)
+    ActorPing.schedule(table, WaitForAction(allUsers.values.toList, getPlayer), 3000L)
 
   }
 
   def waitingForAction = {
-    Table.table ! WaitForAction(allUsers.values.toList, getPlayer)
+    table ! WaitForAction(allUsers.values.toList, getPlayer)
   }
 
   def getPlayer = {
@@ -114,32 +131,32 @@ class Dealer {
 
   def call(player: Player) = {
     player.satisfied = true
-    var amount = Table.table.getHighestRoundMoney.get - player.usedMoney
-    Table.table ! SetMoney(player, amount)
-    Table.table.sendStatusMessage(player.playername+" calls")
+    var amount = table.getHighestRoundMoney.get - player.usedMoney
+    table ! SetMoney(player, amount)
+    table.sendStatusMessage(player.playername+" calls")
     checkStep
   }
 
   def check(player: Player) = {
     player.satisfied = true
-    Table.table.sendStatusMessage(player.playername+" checks")
+    table.sendStatusMessage(player.playername+" checks")
     checkStep
   }
 
   def raise(player: Player) = {
-    var amount = 4
+    var amount = table.getRaiseAmount
 
     getActivePlayers.foreach(p => p.satisfied = false)
     player.satisfied = true
 
-    var plus = Table.table.getHighestRoundMoney.get + amount - player.usedMoney
+    var plus = table.getHighestRoundMoney.get + amount - player.usedMoney
 
-    Table.table ! SetMoney(player, plus)
+    table ! SetMoney(player, plus)
 
-    if (Table.table.getHighestRoundMoney.get == 0) {
-      Table.table.sendStatusMessage(player.playername+" bets "+plus)
+    if (table.getHighestRoundMoney.get == 0) {
+      table.sendStatusMessage(player.playername+" bets "+plus)
     } else {
-      Table.table.sendStatusMessage(player.playername+" raises to "+(Table.table.getHighestRoundMoney.get + amount))
+      table.sendStatusMessage(player.playername+" raises to "+(table.getHighestRoundMoney.get + amount))
     }
 
 
@@ -150,23 +167,17 @@ class Dealer {
     //remove in active list
     player.satisfied = true
     player.fold = true
-    Table.table.sendStatusMessage(player.playername+" folds")
+    table.sendStatusMessage(player.playername+" folds")
     checkStep
 
-  }
-
-  def timeout(player: Player) = {
-    //Player is gone anyway...
-    Table.table.sendMessage(player.playername,"has left the table")
-    checkStep
   }
 
   def checkStep = {
     if (onlyOnePlayerLeft) {
-      getActivePlayers.first.money.add(Table.table.allPlayedMoney)
-      Table.table.updatePlayers
+      getActivePlayers.first.money.add(table.allPlayedMoney)
+      table.updatePlayers
 
-      ActorPing.schedule(Table.table, ResetGame(), 5000L)
+      ActorPing.schedule(table, ResetGame(), 5000L)
     } else {
       if (getActivePlayers.filter(p => !p.satisfied).toList.size == 0) {
 
@@ -174,7 +185,7 @@ class Dealer {
         findNextPosition
 
         poker.next
-        Table.table ! poker.getActiveRound
+        table ! poker.getActiveRound
 
 
       } else {
@@ -192,9 +203,9 @@ class Dealer {
       var cards = new Cards(5)
 
       user.getCards.foreach((c: Card) => cards.add(c.getJavaCard))
-      Table.table.flop.foreach((c: Card) => cards.add(c.getJavaCard))
-      Table.table.turn.foreach((c: Card) => cards.add(c.getJavaCard))
-      Table.table.river.foreach((c: Card) => cards.add(c.getJavaCard))
+      table.flop.foreach((c: Card) => cards.add(c.getJavaCard))
+      table.turn.foreach((c: Card) => cards.add(c.getJavaCard))
+      table.river.foreach((c: Card) => cards.add(c.getJavaCard))
 
       //If just someone told me that the cards has to be sorted and reversed to be evaluated correctly
       Collections.sort(cards)
@@ -205,7 +216,7 @@ class Dealer {
 
     })
     var winner = getActivePlayers.sort((p1, p2) => p1.handrank.compareTo(p2.handrank) < 0).last
-    Table.table.sendStatusMessage(winner.playername+" wins with "+winner.handrank)
+    table.sendStatusMessage(winner.playername+" wins with "+winner.handrank)
     winner
 
   }
