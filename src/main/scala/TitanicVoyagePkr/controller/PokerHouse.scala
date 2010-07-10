@@ -11,7 +11,11 @@ import net.liftweb.actor.LiftActor
  */
 
 object PokerHouse {
-  private lazy val tables  : List[Table] = List(Table.table,TableTwo.table,TableThree.table)
+  private lazy val tables: List[Table] = List(
+    Table.table,
+    TableTwo.table,
+    TableThree.table,
+    TableFour.table)
 
   def getTables = {
     tables

@@ -32,3 +32,18 @@ class TableThree extends Table {
 object TableThree {
   lazy val table = new TableThree
 }
+
+////////////////////
+
+class TableFour extends Table {
+  override protected val id = 4
+  override protected val size = 8
+  override protected val name = "Titanic Voyage"
+  override protected val smallblind = 1
+  override protected val bigblind = 2
+  override protected val raiseAmount = 4
+}
+
+object TableFour {
+  lazy val table = new TableFour
+}

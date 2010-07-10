@@ -69,7 +69,11 @@ class Player extends CometActor {
       "player1name" -> getPlayerName(1),
       "player2name" -> getPlayerName(2),
       "player3name" -> getPlayerName(3),
-      "player4name" -> getPlayerName(4)
+      "player4name" -> getPlayerName(4),
+      "player5name" -> getPlayerName(5),
+      "player6name" -> getPlayerName(6),
+      "player7name" -> getPlayerName(7),
+      "player8name" -> getPlayerName(8)
 
       )
   }
@@ -277,14 +281,26 @@ class Player extends CometActor {
             JqSetHtml("player2card1", Text("")) & JqSetHtml("player2card2", Text("")) &
             JqSetHtml("player3card1", Text("")) & JqSetHtml("player3card2", Text("")) &
             JqSetHtml("player4card1", Text("")) & JqSetHtml("player4card2", Text("")) &
+            JqSetHtml("player5card1", Text("")) & JqSetHtml("player5card2", Text("")) &
+            JqSetHtml("player6card1", Text("")) & JqSetHtml("player6card2", Text("")) &
+            JqSetHtml("player7card1", Text("")) & JqSetHtml("player7card2", Text("")) &
+            JqSetHtml("player8card1", Text("")) & JqSetHtml("player8card2", Text("")) &
             JqSetHtml("player1money", Text("")) &
             JqSetHtml("player2money", Text("")) &
             JqSetHtml("player3money", Text("")) &
             JqSetHtml("player4money", Text("")) &
+            JqSetHtml("player5money", Text("")) &
+            JqSetHtml("player6money", Text("")) &
+            JqSetHtml("player7money", Text("")) &
+            JqSetHtml("player8money", Text("")) &
             JqSetHtml("player1action", Text("")) &
             JqSetHtml("player2action", Text("")) &
             JqSetHtml("player3action", Text("")) &
             JqSetHtml("player4action", Text("")) &
+            JqSetHtml("player5action", Text("")) &
+            JqSetHtml("player6action", Text("")) &
+            JqSetHtml("player7action", Text("")) &
+            JqSetHtml("player8action", Text("")) &
             JqSetHtml("flop1", Text("")) &
             JqSetHtml("flop2", Text("")) &
             JqSetHtml("flop3", Text("")) &

@@ -1,0 +1,243 @@
+html,body {
+    width:100%;
+    height:100%;
+    margin:0;
+    padding:0;
+    font-family:Arial;
+    background-image: url('../images/background.jpg');
+
+}
+
+#table {
+   background-image: url('../images/titanicvoyage_table.png');
+   width:956px;
+   height:712px;
+   margin:auto;
+   margin-top:300px;
+   z-index:5;
+}
+
+
+.playername, .playernameactive, .playernamewinner {
+   background-image: url('../images/playername.png');
+   background-repeat:no-repeat;
+   width:171px;
+   height:26px;
+   text-align:center;
+   font-size:11px;
+   padding-top:6px;
+}
+
+.playernameactive {
+   background-image: url('../images/playername_active.png');
+}
+
+.playernamewinner {
+   background-image: url('../images/schildwin.png');
+}
+
+#player1 {
+    position:absolute;
+    margin-left:-50px;
+    margin-top:230px;
+}
+
+#player2 {
+    position:absolute;
+    margin-left:130px;
+    margin-top:30px;
+}
+
+#player3 {
+    position:absolute;
+    margin-left:390px;
+    margin-top:-50px;
+}
+
+#player4 {
+    position:absolute;
+    margin-left:650px;
+    margin-top:30px;
+}
+
+#player5 {
+    position:absolute;
+    margin-left:820px;
+    margin-top:230px;
+}
+
+#player6 {
+    position:absolute;
+    margin-left:650px;
+    margin-top:480px;
+}
+
+#player7 {
+    position:absolute;
+    margin-left:390px;
+    margin-top:550px;
+}
+
+#player8 {
+    position:absolute;
+    margin-left:130px;
+    margin-top:480px;
+}
+
+#player1money {
+    position: absolute;
+    margin-left:240px;
+    margin-top:75px;
+}
+
+#player2money {
+    position: absolute;
+    margin-left:130px;
+    margin-top:170px;
+}
+#player3money {
+    position: absolute;
+    margin-left:75px;
+    margin-top:200px;
+}
+#player4money {
+    position: absolute;
+    margin-left:0px;
+    margin-top:170px;
+}
+
+#player5money {
+    position: absolute;
+    margin-left:-90px;
+    margin-top:80px;
+}
+
+#player6money {
+    position: absolute;
+    margin-left:0px;
+    margin-top:-80px;
+}
+#player7money {
+    position: absolute;
+    margin-left:70px;
+    margin-top:-80px;
+}
+#player8money {
+    position: absolute;
+    margin-left:150px;
+    margin-top:-80px;
+}
+
+#player1countdown,#player2countdown,#player3countdown,#player4countdown,#player5countdown,#player6countdown,#player7countdown,#player8countdown {
+    display:none;
+    height:5px;
+    width:150px;
+    background-color: #f4ed85;
+    margin-left:10px;
+}
+
+.card {
+    float:left;
+    margin-left:3px;
+}
+
+#tablecards {
+    position:absolute;
+    margin-left:260px;
+    margin-top:300px;
+}
+
+#countdown {
+    position:absolute;
+    margin-left:400px;
+    margin-top:340px;
+    width: 100px;
+    text-align:center;
+    background-color:#FFFFFF;
+    border: 1px solid #000000;
+    padding:10px;
+    display:none;
+}
+
+#allmoney {
+    position:absolute;
+    margin-left:418px;
+    margin-top:420px;
+    width: 100px;
+    text-align:center;
+    padding:10px;
+    display:none;
+}
+
+#winner {
+    position:absolute;
+    margin-left:310px;
+    margin-top:250px;
+    width: 300px;
+    text-align:center;
+    padding:10px;
+    display:none;
+    color: #FFFFFF;
+}
+
+#chat {
+ position:absolute;
+ top:10px;
+ left:10px;
+}
+
+#chatmessages {
+    width:400px;
+    height:200px;
+    overflow:auto;
+    font-size:10px;
+    padding:2px;
+    border:1px solid #FFFFFF;
+    background-image: url('../images/chatbackground.png');
+    color:  #f4ed85;
+    margin-bottom:5px;
+
+}
+
+#status_chat {
+ position:absolute;
+ top:10px;
+ left:850px;
+}
+
+#status_chatmessages {
+    width:400px;
+    height:200px;
+    overflow:auto;
+    font-size:10px;
+    padding:2px;
+    border:1px solid #FFFFFF;
+    background-image: url('../images/chatbackground.png');
+    color:  #FFFFFF;
+    margin-bottom:5px;
+    font-style:italic;
+
+}
+
+.action {
+    color:#FFFFFF;
+    font-size: 12px;
+    padding:5px;
+}
+
+a {
+    text-decoration: none;
+}
+
+.inputtext {
+    width:200px;
+    font-size:12px;
+    border: 1px solid black;
+    color: black;
+}
+
+.inputsubmit {
+    font-size:12px;
+    border: 1px solid black;
+    color: black;
+}

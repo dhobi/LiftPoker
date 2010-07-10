@@ -1,23 +1,5 @@
 <lift:surround with="default" at="content">
-    <head>
-        <link rel="stylesheet" type="text/css" href="styles/style.css"/>
-    </head>
-    <div id="pool">
-        <img src="images/pool.png" width="700" alt="Pool"/>
-    </div>
-    <div id="palme">
-        <img src="images/palme.png" alt="Palme"/>
-    </div>
-    <div id="chat">
-        <div id="chatmessages"/>
-        <lift:Chat form="Post">
-            <chat:message id="message" class="inputtext"/>
-            <chat:submit class="inputsubmit"/>
-        </lift:Chat>
-    </div>
-    <div id="status_chat">
-          <div id="status_chatmessages"/>
-    </div>
+    
     <lift:comet type="Player" />
 
 </lift:surround>
