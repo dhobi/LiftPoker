@@ -22,8 +22,7 @@ http://code.google.com/p/pokerengine/
 2. download bench-13.jar from http://code.google.com/p/pokerengine/downloads/list
 
 3. open a console, change to the directory where you downloaded the library and type the following command:
-    mvn install:install-file -Dfile=bench-13.jar -DgroupId=ch.local \
-    -DartifactId=poker -Dversion=1.0
+    mvn install:install-file -Dfile=bench-13.jar -DgroupId=ch.local -DartifactId=poker -Dversion=1.0 -Dpackaging=jar
 
 ########
 
