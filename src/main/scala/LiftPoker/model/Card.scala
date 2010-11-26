@@ -1,6 +1,5 @@
 package LiftPoker.model
 
-import com.sampullara.poker.Card
 
 /**
  * Created by IntelliJ IDEA.
@@ -10,29 +9,31 @@ import com.sampullara.poker.Card
  * To change this template use File | Settings | File Templates.
  */
 
-class Card(c : String, v : Int) {
+class Card(c: String, v: Int) {
+  private var color: String = c
+  private var value: Int = v
 
-  private var color : String = c
-  private var value : Int = v
-
-  private var arr = Array("1","2","3","4","5","6","7","8","9","10","bube","dame","konig","ass")
+  private var arr = Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "bube", "dame", "konig", "ass")
 
   def getImage = {
-    "images/"+color+""+arr(value)+".png"
+    "images/" + color + "" + arr(value) + ".png"
   }
 
   def getColor = {
-    
+
   }
 
   def getValue = {
     value
   }
 
-  def getJavaCard() : com.sampullara.poker.Card = {
-    var num = Array("1","2","3","4","5","6","7","8","9","t","j","q","k","a")
-    var convert = Map("h"->"h","ka"->"d","kr"->"c","p"->"s")
+  def getJavaCard(): com.sampullara.poker.Card = {
+    var num = Array("1", "2", "3", "4", "5", "6", "7", "8", "9", "t", "j", "q", "k", "a")
+    var convert = Map("h" -> "h", "ka" -> "d", "kr" -> "c", "p" -> "s")
 
-    new  com.sampullara.poker.Card(Card.Rank.parse(num(value)),Card.Suit.parse(convert.get(color).get))
+    new com.sampullara.poker.Card(
+      com.sampullara.poker.Card.Rank.parse(num(value)),
+      com.sampullara.poker.Card.Suit.parse(convert.get(color).get)
+      )
   }
 }

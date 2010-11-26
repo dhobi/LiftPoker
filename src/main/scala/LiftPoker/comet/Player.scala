@@ -35,7 +35,8 @@ class Player extends CometActor {
   val money = new Money(500)
   var usedMoney = 0
 
-
+  //render on every page reload
+  override def devMode = true
 
   var future: ScheduledFuture[Unit] = null
 
@@ -56,14 +57,23 @@ class Player extends CometActor {
   }
 
   override def render() = {
-
     table = currentTable.is
     playername = currentUser.is
 
-    table.updatePlayers
-    table.updateCards
-
     table ! AddWatcher(this)
+
+    table !  UpdatePlayers
+    table ! UpdateCards
+
+
+    def exitPlayer: JsCmd = {
+      table ! RemoveWatcher(this);
+      table ! RemovePlayer(this);
+
+      currentTable(null)
+      resetGame & JsCmds.RedirectTo("/")
+    }
+
 
     bind("comet", table.getXML,
       "player1name" -> getPlayerName(1),
@@ -74,15 +84,16 @@ class Player extends CometActor {
       "player6name" -> getPlayerName(6),
       "player7name" -> getPlayerName(7),
       "player8name" -> getPlayerName(8)
-
-      )
+      ) ++
+            bind("comet", this.defaultXml,
+              "back" -> SHtml.a(() => exitPlayer, Text("Exit"))
+              )
   }
 
   def getPlayerName(i: Int): NodeSeq = {
-    if (table.getPlayers.isDefinedAt(i)) {
-      Text(table.getPlayers.get(i).get.playername)
-    } else {
-      SHtml.a(() => {table ! AddPlayerToTable(this, i); clearNames; }, Text("Sit down"))
+    table.getPlayers.isDefinedAt(i) match {
+      case true => Text(table.getPlayers.get(i).get.playername)
+      case false => SHtml.a(() => {table ! AddPlayerToTable(this, i); JsCmds.Noop}, Text("Sit down"))
     }
   }
 
@@ -152,27 +163,29 @@ class Player extends CometActor {
 
   def clearNames: JsCmd = {
     (1 to table.getSize).map(i => {
-      var html: NodeSeq = Text("")
-      if (id == 0) {
-        html = SHtml.a(() => {table ! AddPlayerToTable(this, i); clearNames; }, Text("Sit down"))
+      val html: NodeSeq = id match {
+        case 0 => SHtml.a(() => {table ! AddPlayerToTable(this, i); JsCmds.Noop}, Text("Sit down"))
+        case _ => Text("")
       }
       JqSetHtml("player" + i + "name", html)
     }).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
   }
 
   def updatePlayers(users: List[Player]): JsCmd = {
-    clearNames & users.map(user => JqSetHtml("player" + user.id + "name", Text(user.playername) ++ <span style="margin-left:20px;">
-      {user.money.get}
-    </span> ++ showExit(user))).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
+    clearNames & users.map(user => {
+      JqSetHtml("player" + user.id + "name", Text(user.playername) ++
+              <span style="margin-left:20px;">
+                {user.money.get}
+              </span> ++ showExit(user))
+    }).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
   }
 
   def showExit(user: Player) = {
-    if (this.id == user.id) {
-      <span style="margin-left:20px;">
+    (this.id == user.id) match {
+      case true => <span style="margin-left:20px;">
         {SHtml.a(() => {table ! RemovePlayer(this); currentTable(null); resetGame; JsCmds.RedirectTo("/"); }, Text("x"))}
       </span>
-    } else {
-      <span style="margin-left:20px;"></span>
+      case false => <span style="margin-left:20px;"></span>
     }
   }
 

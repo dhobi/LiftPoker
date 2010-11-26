@@ -19,7 +19,7 @@ class Boot {
 
     val ifUserSet = If(
       () => !currentUser.is.equals("") && currentTable.is != null,
-      () => RedirectWithState("/", RedirectState(() => S.error("Namen angeben"))))
+      () => RedirectWithState("/", RedirectState(() => S.error("Please give in a name."))))
 
     val ifUserNotSet = If(
       () => currentUser.is.equals("") || currentTable.is == null,

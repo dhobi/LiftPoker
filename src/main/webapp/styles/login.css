@@ -46,8 +46,20 @@ a {
 
 .inputsubmit {
     font-size:12px;
-    height:30px;
+    height:34px;
     background-color:#118603;
     border: 1px solid white;
     color: #e6ffdc;
+}
+
+#lift__noticesContainer__ {
+    width:500px;
+    text-align:left;
+    margin-left:210px;
+    font-size:11px;
+}
+
+#lift__noticesContainer___error ul {
+    margin:0;
+    padding:0;
 }

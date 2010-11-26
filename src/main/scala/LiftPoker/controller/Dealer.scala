@@ -45,7 +45,7 @@ class Dealer(fromTable : Table) {
     if (allUsers.size >= 2 && !hasStarted) {
       startGame
     } else if (hasStarted) {
-      table.updateCards
+      table ! UpdateCards
     }
   }
 
@@ -61,7 +61,7 @@ class Dealer(fromTable : Table) {
 
     if(onlyOnePlayerLeft) {
       getActivePlayers.first.money.add(table.allPlayedMoney)
-      table.updatePlayers
+      table !  UpdatePlayers
       table ! ResetGame()
     }
 
@@ -175,7 +175,7 @@ class Dealer(fromTable : Table) {
   def checkStep = {
     if (onlyOnePlayerLeft) {
       getActivePlayers.first.money.add(table.allPlayedMoney)
-      table.updatePlayers
+      table ! UpdatePlayers
 
       ActorPing.schedule(table, ResetGame(), 5000L)
     } else {
@@ -227,15 +227,21 @@ class Dealer(fromTable : Table) {
   }
 
   def moveDealer: Unit = {
-    dealer = (dealer + 1) % (allUsers.values.toList.sort(_.id > _.id).first.id + 1)
-    if (!allUsers.isDefinedAt(dealer)) {
+    dealer = (dealer + 1) % (allUsers.values.toList.sort(_.id > _.id).headOption match {
+      case Some(player) =>  player.id + 1
+      case None => 1
+    })
+    if (!allUsers.isDefinedAt(dealer) && !allUsers.isEmpty) {
       moveDealer
     }
   }
 
   def movePlayer: Unit = {
-    position = (position + 1) % (allUsers.values.toList.sort(_.id > _.id).first.id + 1)
-    if (!allUsers.isDefinedAt(position)) {
+    position = (position + 1) % (allUsers.values.toList.sort(_.id > _.id).headOption match {
+            case Some(player) => player.id + 1
+            case None => 1
+    })
+    if (!allUsers.isDefinedAt(position) && !allUsers.isEmpty) {
       movePlayer
     }
   }

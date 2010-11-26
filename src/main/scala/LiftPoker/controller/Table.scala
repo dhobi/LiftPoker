@@ -1,6 +1,5 @@
 package LiftPoker.controller
 
-import net.liftweb.common.SimpleActor
 import net.liftweb.actor.LiftActor
 import LiftPoker.comet.Player
 import net.liftweb.util.ActorPing
@@ -8,6 +7,7 @@ import net.liftweb.util.Helpers._
 import LiftPoker.model._
 import net.liftweb.http.{TemplateFinder, S}
 import xml.Text
+import net.liftweb.common.{Failure, Empty, Full, SimpleActor}
 
 /**
  * Created by IntelliJ IDEA.
@@ -29,7 +29,8 @@ class Table extends LiftActor {
   protected var cardstack = new CardStack()
   protected val dealer = new Dealer(this)
   protected val size = 4
-  protected val tobind = TemplateFinder.findAnyTemplate("tables/table" + size :: Nil)
+
+  protected def tobind = TemplateFinder.findAnyTemplate("tables" :: "table" + size.toString :: Nil)
 
 
   var flop: List[Card] = List()
@@ -57,7 +58,11 @@ class Table extends LiftActor {
   }
 
   def getXML = {
-    tobind.openOr(Text("Not found"))
+    tobind match {
+      case Full(nodeseq) => nodeseq
+      case Failure(message, _, _) => println(message); Text("Not found")
+      case Empty => Text("Not found")
+    }
   }
 
   def getBigBlind = {
@@ -73,153 +78,167 @@ class Table extends LiftActor {
   }
 
   protected def messageHandler =
-    {
-      case AddWatcher(me) => {
-        if (!tablewatchers.find(p => p.id == me.id).isDefined) {
-          tablewatchers = tablewatchers ::: List(me)
-        }
+  {
+    case AddWatcher(me) => {
+      tablewatchers.find(p => p.uniqueId == me.uniqueId) match {
+        case Some(watcher) => ()
+        case None => tablewatchers = tablewatchers ::: List(me)
       }
-      case AddPlayerToTable(me, seat) => {
-        if (!tableplayers.isDefinedAt(seat)) {
-          me.id = seat
-          tableplayers ++= List(me.id -> me)
-          updatePlayers
+    }
+    case AddPlayerToTable(me, seat) => {
+      if (!tableplayers.isDefinedAt(seat)) {
+        me.id = seat
+        tableplayers ++= List(me.id -> me)
+        updatePlayers
+        //Tell dealer
+        dealer.addUser(me)
+      }
+    }
+    case RemoveWatcher(me) => {
+      tablewatchers.find(p => p.uniqueId == me.uniqueId) match {
+        case Some(watcher) => tablewatchers -= watcher
+        case None => ()
+      }
+    }
+    case RemovePlayer(me) => {
+      tableplayers.find(tup => tup._1 == me.id) match {
+        case Some((i, player)) => {
+          tableplayers -= i
 
           //Tell dealer
-          dealer.addUser(me)
+          dealer.removeUser(player)
+          player.id = 0
+          player.resetGame
+
+          updatePlayers
         }
+        case None => ()
       }
-      case RemoveWatcher(me) => {
-        tablewatchers = tablewatchers.filter(p => p.id != me.id)
 
-      }
-      case RemovePlayer(me) => {
-         tableplayers -= me.id
-
-        //Tell dealer
-        dealer.removeUser(me)
-        me.id = 0
-        me.resetGame
-
-        updatePlayers
-      }
-      case Countdown() => {
-        ActorPing.schedule(this, Seconds(5), 1000L)
-        interrupted = false
-      }
-      case Seconds(s: Int) => {
-        if (!interrupted) {
-
-          if (s != 0) {
-            ActorPing.schedule(this, Seconds(s - 1), 1000L)
-            tableplayers.values.foreach(_ ! Seconds(s))
-          } else {
-            tableplayers.values.foreach(_ ! Seconds(s))
-            dealer.dealCards
-          }
-        }
-      }
-      case DealCards() => {
-        tableplayers.values.foreach(player => player.addCards(cardstack.getCards(2)))
-        updateCards
-      }
-      case SmallBlind(player: Player) => {
-        if (!interrupted) {
-          money = money ::: List(new Money(smallblind))
-          roundmoney ++= List(player -> new Money(smallblind))
-
-          dealer.updateMoney(player, smallblind)
-
-          tablewatchers.foreach(_ ! PutSmallBlind(player, smallblind))
-        }
-      }
-      case BigBlind(player: Player) => {
-        if (!interrupted) {
-          money = money ::: List(new Money(bigblind))
-          roundmoney ++= List(player -> new Money(bigblind))
-
-          dealer.updateMoney(player, bigblind)
-
-          tablewatchers.foreach(_ ! PutBigBlind(player, bigblind))
-        }
-      }
-      case SetMoney(player: Player, money: Int) => {
-
-        dealer.updateMoney(player, money)
-
-        this.money = this.money ::: List(new Money(money))
-        roundmoney ++= List(player -> new Money(player.usedMoney))
-
-        tablewatchers.foreach(_ ! SetMoney(player, player.usedMoney))
-      }
-      case WaitForAction(players: List[Player], player: Player) => {
-        if(!interrupted) {
-          tablewatchers.foreach(_ ! PutWait(players, player))
-        }
-      }
-      case Fold(player: Player) => {
-        tablewatchers.foreach(_ ! StopCountdown())
-        dealer.fold(player)
-        tablewatchers.foreach(_ ! Fold(player))
-
-      }
-      case Call(player: Player) => {
-        tablewatchers.foreach(_ ! StopCountdown())
-        dealer.call(player)
-      }
-      case Check(player: Player) => {
-        tablewatchers.foreach(_ ! StopCountdown())
-        dealer.check(player)
-      }
-      case Raise(player: Player) => {
-        tablewatchers.foreach(_ ! StopCountdown())
-        dealer.raise(player)
-      }
-      case Flop() => {
-        roundmoney = Map()
-        tableplayers.values.foreach(p => p.usedMoney = 0)
-
-        flop = cardstack.getCards(3)
-        tablewatchers.foreach(_ ! ShowFlop(flop))
-        sendStatusMessage("Flop: " + flop.map(c => c.getJavaCard.toString).foldRight[String]("")(_ + "," + _))
-        updateAllMoney
-
-        dealer.waitingForAction
-      }
-      case Turn() => {
-        roundmoney = Map()
-        tableplayers.values.foreach(p => p.usedMoney = 0)
-
-        turn = cardstack.getCards(1)
-        tablewatchers.foreach(_ ! ShowTurn(turn))
-        sendStatusMessage("Turn: " + turn.firstOption.get.getJavaCard.toString)
-        updateAllMoney
-        dealer.waitingForAction
-      }
-      case River() => {
-        roundmoney = Map()
-        tableplayers.values.foreach(p => p.usedMoney = 0)
-
-        river = cardstack.getCards(1)
-        tablewatchers.foreach(_ ! ShowRiver(river))
-        sendStatusMessage("River: " + river.firstOption.get.getJavaCard.toString)
-        updateAllMoney
-        dealer.waitingForAction
-      }
-      case ShowDown() => {
-        var winner = dealer.showdown
-        winner.money.add(allPlayedMoney)
-        tablewatchers.foreach(_ ! ShowShowDown(tableplayers.values.toList, winner))
-        ActorPing.schedule(this, ResetGame(), 10000L)
-      }
-      case ResetGame() => {
-        resetGame
-      }
-      case SendMessage(player: String, str: String) => {
-        sendMessage(player, str)
-      }
-      case _ =>
     }
+    case UpdatePlayers() => {
+      updatePlayers
+    }
+    case Countdown() => {
+      ActorPing.schedule(this, Seconds(5), 1000L)
+      interrupted = false
+    }
+    case Seconds(s: Int) => {
+      if (!interrupted) {
+
+        if (s != 0) {
+          ActorPing.schedule(this, Seconds(s - 1), 1000L)
+          tableplayers.values.foreach(_ ! Seconds(s))
+        } else {
+          tableplayers.values.foreach(_ ! Seconds(s))
+          dealer.dealCards
+        }
+      }
+    }
+    case DealCards() => {
+      tableplayers.values.foreach(player => player.addCards(cardstack.getCards(2)))
+      updateCards
+    }
+    case UpdateCards() => {
+      updateCards
+    }
+    case SmallBlind(player: Player) => {
+      if (!interrupted) {
+        money = money ::: List(new Money(smallblind))
+        roundmoney ++= List(player -> new Money(smallblind))
+
+        dealer.updateMoney(player, smallblind)
+
+        tablewatchers.foreach(_ ! PutSmallBlind(player, smallblind))
+      }
+    }
+    case BigBlind(player: Player) => {
+      if (!interrupted) {
+        money = money ::: List(new Money(bigblind))
+        roundmoney ++= List(player -> new Money(bigblind))
+
+        dealer.updateMoney(player, bigblind)
+
+        tablewatchers.foreach(_ ! PutBigBlind(player, bigblind))
+      }
+    }
+    case SetMoney(player: Player, money: Int) => {
+
+      dealer.updateMoney(player, money)
+
+      this.money = this.money ::: List(new Money(money))
+      roundmoney ++= List(player -> new Money(player.usedMoney))
+
+      tablewatchers.foreach(_ ! SetMoney(player, player.usedMoney))
+    }
+    case WaitForAction(players: List[Player], player: Player) => {
+      if (!interrupted) {
+        tablewatchers.foreach(_ ! PutWait(players, player))
+      }
+    }
+    case Fold(player: Player) => {
+      tablewatchers.foreach(_ ! StopCountdown())
+      dealer.fold(player)
+      tablewatchers.foreach(_ ! Fold(player))
+
+    }
+    case Call(player: Player) => {
+      tablewatchers.foreach(_ ! StopCountdown())
+      dealer.call(player)
+    }
+    case Check(player: Player) => {
+      tablewatchers.foreach(_ ! StopCountdown())
+      dealer.check(player)
+    }
+    case Raise(player: Player) => {
+      tablewatchers.foreach(_ ! StopCountdown())
+      dealer.raise(player)
+    }
+    case Flop() => {
+      roundmoney = Map()
+      tableplayers.values.foreach(p => p.usedMoney = 0)
+
+      flop = cardstack.getCards(3)
+      tablewatchers.foreach(_ ! ShowFlop(flop))
+      sendStatusMessage("Flop: " + flop.map(c => c.getJavaCard.toString).foldRight[String]("")(_ + "," + _))
+      updateAllMoney
+
+      dealer.waitingForAction
+    }
+    case Turn() => {
+      roundmoney = Map()
+      tableplayers.values.foreach(p => p.usedMoney = 0)
+
+      turn = cardstack.getCards(1)
+      tablewatchers.foreach(_ ! ShowTurn(turn))
+      sendStatusMessage("Turn: " + turn.firstOption.get.getJavaCard.toString)
+      updateAllMoney
+      dealer.waitingForAction
+    }
+    case River() => {
+      roundmoney = Map()
+      tableplayers.values.foreach(p => p.usedMoney = 0)
+
+      river = cardstack.getCards(1)
+      tablewatchers.foreach(_ ! ShowRiver(river))
+      sendStatusMessage("River: " + river.firstOption.get.getJavaCard.toString)
+      updateAllMoney
+      dealer.waitingForAction
+    }
+    case ShowDown() => {
+      var winner = dealer.showdown
+      winner.money.add(allPlayedMoney)
+      tablewatchers.foreach(_ ! ShowShowDown(tableplayers.values.toList, winner))
+      ActorPing.schedule(this, ResetGame(), 10000L)
+    }
+    case ResetGame() => {
+      resetGame
+    }
+    case SendMessage(player: String, str: String) => {
+      sendMessage(player, str)
+    }
+    case _ =>
+  }
 
   def updatePlayers = {
     tablewatchers.foreach(_ ! AddPlayers(tableplayers.values.toList))
@@ -270,9 +289,11 @@ case class RemoveWatcher(actor: Player)
 case class RemovePlayer(actor: Player)
 case class AddPlayerToTable(actor: Player, seat: Int)
 case class AddPlayers(players: List[Player])
+case class UpdatePlayers()
 
 case class Countdown()
 case class DealCards()
+case class UpdateCards()
 case class CardsDealed(players: List[Player])
 case class SmallBlind(player: Player)
 case class BigBlind(player: Player)
