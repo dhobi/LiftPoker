@@ -1,11 +1,11 @@
-package TitanicVoyagePkr.controller
+package LiftPoker.controller
 
 import net.liftweb.common.SimpleActor
 import net.liftweb.actor.LiftActor
-import TitanicVoyagePkr.comet.Player
+import LiftPoker.comet.Player
 import net.liftweb.util.ActorPing
 import net.liftweb.util.Helpers._
-import TitanicVoyagePkr.model._
+import LiftPoker.model._
 import net.liftweb.http.{TemplateFinder, S}
 import xml.Text
 
@@ -22,7 +22,7 @@ class Table extends LiftActor {
   protected val name = "Lift Poker"
 
   protected var tablewatchers: List[Player] = List()
-  protected var tableplayers: Map[int, Player] = Map()
+  protected var tableplayers: Map[Int, Player] = Map()
   protected var interrupted = true
   protected var money: List[Money] = List()
   protected var roundmoney: Map[Player, Money] = Map()
@@ -107,7 +107,7 @@ class Table extends LiftActor {
         ActorPing.schedule(this, Seconds(5), 1000L)
         interrupted = false
       }
-      case Seconds(s: int) => {
+      case Seconds(s: Int) => {
         if (!interrupted) {
 
           if (s != 0) {
@@ -143,7 +143,7 @@ class Table extends LiftActor {
           tablewatchers.foreach(_ ! PutBigBlind(player, bigblind))
         }
       }
-      case SetMoney(player: Player, money: int) => {
+      case SetMoney(player: Player, money: Int) => {
 
         dealer.updateMoney(player, money)
 
@@ -263,7 +263,7 @@ class Table extends LiftActor {
 
 }
 
-case class Seconds(s: int)
+case class Seconds(s: Int)
 
 case class AddWatcher(actor: Player)
 case class RemoveWatcher(actor: Player)
@@ -276,10 +276,10 @@ case class DealCards()
 case class CardsDealed(players: List[Player])
 case class SmallBlind(player: Player)
 case class BigBlind(player: Player)
-case class SetMoney(player: Player, money: int)
+case class SetMoney(player: Player, money: Int)
 
-case class PutSmallBlind(player: Player, money: int)
-case class PutBigBlind(player: Player, money: int)
+case class PutSmallBlind(player: Player, money: Int)
+case class PutBigBlind(player: Player, money: Int)
 
 case class WaitForAction(players: List[Player], player: Player)
 case class PutWait(players: List[Player], player: Player)

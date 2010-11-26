@@ -33,11 +33,11 @@ class AppTest extends TestCase("app") {
 
   def testHand() = {
     var cards = new Cards(5)
-    cards.add(new model.Card("h",3).getJavaCard)
-    cards.add(new model.Card("h",5).getJavaCard)
-    cards.add(new model.Card("kr",6).getJavaCard)
-    cards.add(new model.Card("h",4).getJavaCard)
-    cards.add(new model.Card("h",2).getJavaCard)
+    cards.add(new LiftPoker.model.Card("h",3).getJavaCard)
+    cards.add(new LiftPoker.model.Card("h",5).getJavaCard)
+    cards.add(new LiftPoker.model.Card("kr",6).getJavaCard)
+    cards.add(new LiftPoker.model.Card("h",4).getJavaCard)
+    cards.add(new LiftPoker.model.Card("h",2).getJavaCard)
     Collections.sort(cards)
     Collections.reverse(cards)
 

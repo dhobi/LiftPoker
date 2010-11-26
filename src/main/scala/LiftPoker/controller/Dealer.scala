@@ -1,13 +1,13 @@
-package TitanicVoyagePkr.controller
+package LiftPoker.controller
 
-import TitanicVoyagePkr.comet.Player
+import LiftPoker.comet.Player
 import net.liftweb.actor.LiftActor
-import collection.mutable.Buffer
-import collection.jcl.Buffer
+
 import net.liftweb.util.ActorPing
 import net.liftweb.util.Helpers._
-import TitanicVoyagePkr.model.{Card, Poker}
+import LiftPoker.model.{Card, Poker}
 import com.sampullara.poker.{HandRank, Cards}
+import scala.collection.JavaConversions._
 import java.util.Collections
 
 /**

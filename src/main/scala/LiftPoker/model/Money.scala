@@ -1,4 +1,4 @@
-package TitanicVoyagePkr.model
+package LiftPoker.model
 
 /**
  * Created by IntelliJ IDEA.
@@ -8,14 +8,14 @@ package TitanicVoyagePkr.model
  * To change this template use File | Settings | File Templates.
  */
 
-class Money(amount : int) {
+class Money(amount: Int) {
   private var value = amount
 
-  def remove(v : int) = {
+  def remove(v: Int) = {
     value = value - v
   }
 
-  def add(v : int) = {
+  def add(v: Int) = {
     value = value + v
   }
 
@@ -23,12 +23,12 @@ class Money(amount : int) {
     value
   }
 
-  def hasMin(v:int) : Boolean = {
+  def hasMin(v: Int): Boolean = {
     value >= v
   }
 
-  def +(money: Money) : Money = {
-     new Money(value+money.get)
+  def +(money: Money): Money = {
+    new Money(value + money.get)
   }
 
 }

@@ -1,6 +1,6 @@
-package TitanicVoyagePkr.model
+package LiftPoker.model
 
-import TitanicVoyagePkr.controller.ResetGame
+import LiftPoker.controller.ResetGame
 
 /**
  * Created by IntelliJ IDEA.

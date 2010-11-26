@@ -1,4 +1,4 @@
-package TitanicVoyagePkr.controller
+package LiftPoker.controller
 
 import net.liftweb.actor.LiftActor
 

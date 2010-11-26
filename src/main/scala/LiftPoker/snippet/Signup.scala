@@ -1,12 +1,11 @@
-package TitanicVoyagePkr.snippet
+package LiftPoker.snippet
 
-import TitanicVoyagePkr.model.User
 import net.liftweb.util.Helpers._
 import net.liftweb.http.{S, SHtml, SessionVar}
-import TitanicVoyagePkr.comet.Player
+import LiftPoker.comet.Player
 import net.liftweb.http.js.jquery.JqJsCmds.JqSetHtml
 import xml.{Text, NodeSeq}
-import TitanicVoyagePkr.controller.{Table, PokerHouse}
+import LiftPoker.controller.{Table, PokerHouse}
 import net.liftweb.http.js.{JsCmds, JsCmd}
 
 /**

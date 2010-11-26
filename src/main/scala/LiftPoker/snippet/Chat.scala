@@ -1,8 +1,8 @@
-package TitanicVoyagePkr.snippet
+package LiftPoker.snippet
 
 import xml.NodeSeq
 import net.liftweb.http.js.JsCmds
-import TitanicVoyagePkr.controller.{SendMessage, Table}
+import LiftPoker.controller.{SendMessage, Table}
 import net.liftweb.http.SHtml
 import net.liftweb.util.Helpers._
 import net.liftweb.http.js.JE.JsRaw

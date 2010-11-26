@@ -1,4 +1,4 @@
-package TitanicVoyagePkr.model
+package LiftPoker.model
 
 import com.sampullara.poker.Card
 
@@ -10,7 +10,7 @@ import com.sampullara.poker.Card
  * To change this template use File | Settings | File Templates.
  */
 
-class Card(c : String, v : int) {
+class Card(c : String, v : Int) {
 
   private var color : String = c
   private var value : Int = v

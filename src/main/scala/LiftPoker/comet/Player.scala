@@ -1,19 +1,19 @@
-package TitanicVoyagePkr.comet
+package LiftPoker.comet
 
 import net.liftweb.http.js.jquery.JqJsCmds.JqSetHtml
 import net.liftweb.http.{SHtml, CometActor}
 import net.liftweb.http.js.{JE, JsCmds, JsCommands, JsCmd}
-import TitanicVoyagePkr.controller._
+import LiftPoker.controller._
 import net.liftweb.util.ActorPing
 import com.sampullara.poker.HandRank
 import net.liftweb.http.js.JsCmds.{Alert, SetValById}
-import TitanicVoyagePkr.model.{Money, Card}
+import LiftPoker.model.{Money, Card}
 import xml.{Node, Elem, NodeSeq, Text}
 import java.util.concurrent.ScheduledFuture
 import net.liftweb.util.Helpers._
 import net.liftweb.http.js.JE.{Str, JsVal, JsRaw}
 import net.liftweb.http.js.JsCommands._
-import TitanicVoyagePkr.snippet.{currentTable, currentUser}
+import LiftPoker.snippet.{currentTable, currentUser}
 
 /**
  * Created by IntelliJ IDEA.
@@ -78,7 +78,7 @@ class Player extends CometActor {
       )
   }
 
-  def getPlayerName(i: int): NodeSeq = {
+  def getPlayerName(i: Int): NodeSeq = {
     if (table.getPlayers.isDefinedAt(i)) {
       Text(table.getPlayers.get(i).get.playername)
     } else {
@@ -100,7 +100,7 @@ class Player extends CometActor {
     case AddPlayers(users: List[Player]) => {
       partialUpdate(updatePlayers(users))
     }
-    case Seconds(s: int) => {
+    case Seconds(s: Int) => {
       partialUpdate(setCountdown(s))
     }
     case StopCountdown() => {
@@ -109,16 +109,16 @@ class Player extends CometActor {
     case CardsDealed(users: List[Player]) => {
       partialUpdate(updateCards(users))
     }
-    case PutSmallBlind(user: Player, money: int) => {
+    case PutSmallBlind(user: Player, money: Int) => {
       partialUpdate(updateMoney(user, money))
     }
-    case PutBigBlind(user: Player, money: int) => {
+    case PutBigBlind(user: Player, money: Int) => {
       partialUpdate(updateMoney(user, money))
     }
     case PutWait(users: List[Player], user: Player) => {
       partialUpdate(updateWait(users, user))
     }
-    case SetMoney(player: Player, money: int) => {
+    case SetMoney(player: Player, money: Int) => {
       partialUpdate(updateMoney(player, money))
     }
     case Fold(player: Player) => {
@@ -139,7 +139,7 @@ class Player extends CometActor {
     case ResetGame() => {
       partialUpdate(resetGame)
     }
-    case ShowAllMoney(players: List[Player], money: int) => {
+    case ShowAllMoney(players: List[Player], money: Int) => {
       partialUpdate(clearMoney(players) & showAllMoney(money))
     }
     case ShowMessage(player: String, str: String) => {
@@ -194,7 +194,7 @@ class Player extends CometActor {
       ).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
   }
 
-  def updateMoney(user: Player, money: int): JsCmd = {
+  def updateMoney(user: Player, money: Int): JsCmd = {
     JqSetHtml("player" + user.id + "money", <img src="images/chip.png" alt=" "/> <span>
       {money}
     </span>)
@@ -217,7 +217,7 @@ class Player extends CometActor {
     (1 to table.getSize).map(i => JE.JsRaw("document.getElementById('player" + i + "name').setAttribute('class','playername')").cmd).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
   }
 
-  def setCountdown(s: int) = {
+  def setCountdown(s: Int) = {
     if (s == 0) {
       JsCmds.JsHideId("countdown")
     } else {
