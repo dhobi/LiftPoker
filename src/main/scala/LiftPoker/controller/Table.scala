@@ -80,12 +80,19 @@ class Table extends LiftActor {
   protected def messageHandler =
   {
     case AddWatcher(me) => {
-      tablewatchers.find(p => p.uniqueId == me.uniqueId) match {
+      //check if already on table --> possible by back button
+      tableplayers.find( tup => tup._2.uniqueId.equals(me.uniqueId)) match {
+        case Some((i, player)) => tableplayers -= i
+        case None => ()
+      }
+
+      tablewatchers.find(p => p.uniqueId.equals(me.uniqueId)) match {
         case Some(watcher) => ()
         case None => tablewatchers = tablewatchers ::: List(me)
       }
     }
     case AddPlayerToTable(me, seat) => {
+      
       if (!tableplayers.isDefinedAt(seat)) {
         me.id = seat
         tableplayers ++= List(me.id -> me)
@@ -95,7 +102,7 @@ class Table extends LiftActor {
       }
     }
     case RemoveWatcher(me) => {
-      tablewatchers.find(p => p.uniqueId == me.uniqueId) match {
+      tablewatchers.find(p => p.uniqueId.equals(me.uniqueId)) match {
         case Some(watcher) => tablewatchers -= watcher
         case None => ()
       }
