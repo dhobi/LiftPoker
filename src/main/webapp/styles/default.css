@@ -1,0 +1,10 @@
+#bottomnavi {
+    position:fixed;
+    height:40px;
+    background-image: url('../images/chatbackground.png');
+    left:0;
+    right:0;
+    bottom:0;
+    border-top: 1px solid #FFFFFF;
+    padding:5px;
+}
