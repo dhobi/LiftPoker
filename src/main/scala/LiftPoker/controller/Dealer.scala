@@ -179,7 +179,7 @@ class Dealer(fromTable : Table) {
 
       ActorPing.schedule(table, ResetGame(), 5000L)
     } else {
-      if (getActivePlayers.filter(p => !p.satisfied).toList.size == 0) {
+      if (getActivePlayers.filter(p => !p.satisfied).isEmpty) {
 
         getActivePlayers.foreach(p => p.satisfied = false)
         findNextPosition

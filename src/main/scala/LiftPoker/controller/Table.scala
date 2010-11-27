@@ -82,7 +82,7 @@ class Table extends LiftActor {
     case AddWatcher(me) => {
       //check if already on table --> possible by back button
       tableplayers.find( tup => tup._2.uniqueId.equals(me.uniqueId)) match {
-        case Some((i, player)) => tableplayers -= i
+        case Some((_, player)) => removePlayer(player)
         case None => ()
       }
 
@@ -108,20 +108,7 @@ class Table extends LiftActor {
       }
     }
     case RemovePlayer(me) => {
-      tableplayers.find(tup => tup._1 == me.id) match {
-        case Some((i, player)) => {
-          tableplayers -= i
-
-          //Tell dealer
-          dealer.removeUser(player)
-          player.id = 0
-          player.resetGame
-
-          updatePlayers
-        }
-        case None => ()
-      }
-
+      removePlayer(me)
     }
     case UpdatePlayers() => {
       updatePlayers
@@ -235,6 +222,7 @@ class Table extends LiftActor {
     case ShowDown() => {
       var winner = dealer.showdown
       winner.money.add(allPlayedMoney)
+      updateAllMoney
       tablewatchers.foreach(_ ! ShowShowDown(tableplayers.values.toList, winner))
       ActorPing.schedule(this, ResetGame(), 10000L)
     }
@@ -249,6 +237,22 @@ class Table extends LiftActor {
 
   def updatePlayers = {
     tablewatchers.foreach(_ ! AddPlayers(tableplayers.values.toList))
+  }
+
+  def removePlayer(me : Player) = {
+    tableplayers.find(tup => tup._1 == me.id) match {
+        case Some((i, player)) => {
+          tableplayers -= i
+
+          //Tell dealer
+          dealer.removeUser(player)
+          player.id = 0
+          player.resetGame
+
+          updatePlayers
+        }
+        case None => ()
+      }
   }
 
   def updateCards = {

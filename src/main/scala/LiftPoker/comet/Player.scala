@@ -62,7 +62,7 @@ class Player extends CometActor {
 
     table ! AddWatcher(this)
 
-    table !  UpdatePlayers
+    table ! UpdatePlayers
     table ! UpdateCards
 
 
