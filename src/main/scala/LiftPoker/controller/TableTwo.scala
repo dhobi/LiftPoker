@@ -13,7 +13,8 @@ import LiftPoker.comet.Bot
 class TableTwo extends Table {
   override protected val id = 2
   override protected val size = 2
-  override protected val name = "Lift Poker 2"
+  override protected val name = "Training Table"
+  val bot0 = new Bot(this,1, "Alex")
 }
 
 object TableTwo {
@@ -42,11 +43,12 @@ object TableThree {
 
 class TableFour extends Table {
   override protected val id = 4
-  override protected val size = 8
-  override protected val name = "Titanic Voyage"
+  override protected val size = 4
+  override protected val name = "Lift Poker 2"
   override protected val smallblind = 1
   override protected val bigblind = 2
   override protected val raiseAmount = 4
+  val bot2 = new Bot(this,1, "Fritz")
 }
 
 object TableFour {
