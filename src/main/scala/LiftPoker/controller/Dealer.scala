@@ -197,7 +197,7 @@ class Dealer(fromTable : Table) {
 
   }
 
-  def showdown: Player = {
+  def showdown: List[Player] = {
     getActivePlayers.foreach(user => {
 
       var cards = new Cards(5)
@@ -212,13 +212,8 @@ class Dealer(fromTable : Table) {
       Collections.reverse(cards)
 
       user.setHandRank(new HandRank(cards))
-
-
     })
-    var winner = getActivePlayers.sort((p1, p2) => p1.handrank.compareTo(p2.handrank) < 0).last
-    table.sendStatusMessage(winner.playername+" wins with "+winner.handrank)
-    winner
-
+    getActivePlayers.sort((p1, p2) => p1.handrank.compareTo(p2.handrank) < 0).reverse
   }
 
   def updateMoney(player: Player, money: Int) = {

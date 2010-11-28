@@ -220,8 +220,11 @@ class Table extends LiftActor {
       dealer.waitingForAction
     }
     case ShowDown() => {
-      var winner = dealer.showdown
+      val orderedRankPlayers = dealer.showdown
+      val winner = orderedRankPlayers.head
+      sendStatusMessage(winner.playername+" wins with "+winner.handrank)
       winner.money.add(allPlayedMoney)
+
       updateAllMoney
       tablewatchers.foreach(_ ! ShowShowDown(tableplayers.values.toList, winner))
       ActorPing.schedule(this, ResetGame(), 10000L)

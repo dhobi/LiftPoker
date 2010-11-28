@@ -1,5 +1,7 @@
 package LiftPoker.controller
 
+import LiftPoker.comet.Bot
+
 /**
  * Created by IntelliJ IDEA.
  * User: dhobi
@@ -23,10 +25,13 @@ object TableTwo {
 class TableThree extends Table {
   override protected val id = 3
   override protected val size = 4
-  override protected val name = "Lift Poker 3"
+  override protected val name = "Bots Hell"
   override protected val smallblind = 5
   override protected val bigblind = 10
   override protected val raiseAmount = 10
+  val bot0 = new Bot(this,1, "Alex")
+  val bot1 = new Bot(this,2, "Sandra")
+  val bot2 = new Bot(this,3, "Fritz")
 }
 
 object TableThree {
