@@ -23,7 +23,7 @@ class Chat {
 
     bind("chat",SHtml.ajaxForm(xhtml),
         "message" -%> SHtml.text("",message = _),
-        "submit" -%> SHtml.ajaxSubmit("Send", () => {Table.table ! SendMessage(currentUser.is,message); JsRaw("document.getElementById('message').value=''").cmd; }))
+        "submit" -%> SHtml.ajaxSubmit("Send", () => {currentTable.is ! SendMessage(currentUser.is,message); JsRaw("document.getElementById('message').value=''").cmd; }))
   }
 
 }

@@ -248,7 +248,7 @@ class Player extends CometActor {
     if (player.id == this.id) {
 
       //setTimeout
-      future = ActorPing.schedule(table, RemovePlayer(this), 35000L)
+      future = ActorPing.schedule(table, TimeOut(this), 35000L)
 
       html = SHtml.a(() => {table ! Fold(this); future.cancel(true); hideActionForm}, <span class="action">Fold</span>)
       if (usedMoney == table.getHighestRoundMoney.get) {

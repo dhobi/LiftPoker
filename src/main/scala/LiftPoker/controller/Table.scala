@@ -110,6 +110,10 @@ class Table extends LiftActor {
     case RemovePlayer(me) => {
       removePlayer(me)
     }
+    case TimeOut(me) => {
+      removePlayer(me)
+      sendStatusMessage(me.playername + " left the table (Timeout)")
+    }
     case UpdatePlayers() => {
       updatePlayers
     }
@@ -252,6 +256,7 @@ class Table extends LiftActor {
           player.id = 0
           player.resetGame
 
+          me ! ResetGame
           updatePlayers
         }
         case None => ()
@@ -301,6 +306,7 @@ case class Seconds(s: Int)
 case class AddWatcher(actor: Player)
 case class RemoveWatcher(actor: Player)
 case class RemovePlayer(actor: Player)
+case class TimeOut(actor: Player)
 case class AddPlayerToTable(actor: Player, seat: Int)
 case class AddPlayers(players: List[Player])
 case class UpdatePlayers()
