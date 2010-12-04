@@ -1,6 +1,7 @@
 html,body {
     width:100%;
     height:100%;
+    min-height:600px;
     margin:0;
     padding:0;
     font-family:Arial;
@@ -10,10 +11,8 @@ html,body {
 
 #pool {
     position:absolute;
-    top:-120px;
-    left:50%;
-    margin-left:-350px;
-    z-index:1;
+    top:-80px;
+    margin-left:275px;
 }
 
 #palme {
@@ -21,14 +20,15 @@ html,body {
     z-index:10;
     top:0px;
     right:0px;
+    display:none;
 }
 
 #table {
    background-image: url('../images/lift_table.png');
    width:770px;
    height:509px;
-   margin:auto;
-   margin-top:300px;
+   margin-left:230px;
+   margin-top:180px;
    z-index:5;
 }
 
@@ -151,7 +151,7 @@ html,body {
 
 #chat {
  position:absolute;
- top:140px;
+ top:10px;
  left:10px;
 }
 
@@ -170,7 +170,7 @@ html,body {
 
 #status_chat {
  position:absolute;
- top:140px;
+ top:10px;
  left:850px;
 }
 
@@ -182,10 +182,10 @@ html,body {
     padding:2px;
     border:1px solid #FFFFFF;
     background-image: url('../images/chatbackground.png');
-    color:  #FFFFFF;
+    color:  #000000;
     margin-bottom:5px;
     font-style:italic;
-
+    font-weight:bold;
 }
 
 .action {

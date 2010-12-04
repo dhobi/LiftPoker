@@ -18,7 +18,7 @@ import java.util.Collections
  * To change this template use File | Settings | File Templates.
  */
 
-class Dealer(fromTable : Table) {
+class Dealer(fromTable: Table) {
   private val poker = new Poker
 
   var hasStarted = false
@@ -28,11 +28,11 @@ class Dealer(fromTable : Table) {
   private var position = 0
   private var dealer = 0
 
-  private var table : Table = fromTable
+  private var table: Table = fromTable
 
   def addUser(user: Player) = {
 
-    table.sendMessage(user.playername,"has joined the table")
+    table.sendStatusMessage(user.playername + " has joined the table")
     if (hasStarted) {
       waitingUsers ++= List((user.seatNr - 1) -> user)
     } else {
@@ -50,19 +50,13 @@ class Dealer(fromTable : Table) {
   }
 
   def removeUser(user: Player) = {
+    val actualPlayerId = getPlayer.seatNr
+
     allUsers -= (user.seatNr - 1)
     waitingUsers -= (user.seatNr - 1)
 
-    table.sendMessage(user.playername,"has left the table")
-
-    if(user.seatNr == getPlayer.seatNr) {
+    if (user.seatNr == actualPlayerId) {
       checkStep
-    }
-
-    if(onlyOnePlayerLeft) {
-      getActivePlayers.first.money.add(table.allPlayedMoney)
-      table !  UpdatePlayers
-      table ! ResetGame()
     }
 
   }
@@ -133,13 +127,13 @@ class Dealer(fromTable : Table) {
     player.satisfied = true
     var amount = table.getHighestRoundMoney.get - player.usedMoney
     table ! SetMoney(player, amount)
-    table.sendStatusMessage(player.playername+" calls")
+    table.sendStatusMessage(player.playername + " calls")
     checkStep
   }
 
   def check(player: Player) = {
     player.satisfied = true
-    table.sendStatusMessage(player.playername+" checks")
+    table.sendStatusMessage(player.playername + " checks")
     checkStep
   }
 
@@ -154,9 +148,9 @@ class Dealer(fromTable : Table) {
     table ! SetMoney(player, plus)
 
     if (table.getHighestRoundMoney.get == 0) {
-      table.sendStatusMessage(player.playername+" bets "+plus)
+      table.sendStatusMessage(player.playername + " bets " + plus)
     } else {
-      table.sendStatusMessage(player.playername+" raises to "+(table.getHighestRoundMoney.get + amount))
+      table.sendStatusMessage(player.playername + " raises to " + (table.getHighestRoundMoney.get + amount))
     }
 
 
@@ -167,7 +161,7 @@ class Dealer(fromTable : Table) {
     //remove in active list
     player.satisfied = true
     player.fold = true
-    table.sendStatusMessage(player.playername+" folds")
+    table.sendStatusMessage(player.playername + " folds")
     checkStep
 
   }
