@@ -34,10 +34,10 @@ class Dealer(fromTable : Table) {
 
     table.sendMessage(user.playername,"has joined the table")
     if (hasStarted) {
-      waitingUsers ++= List((user.id - 1) -> user)
+      waitingUsers ++= List((user.seatNr - 1) -> user)
     } else {
-      waitingUsers ++= List((user.id - 1) -> user)
-      allUsers ++= List((user.id - 1) -> user)
+      waitingUsers ++= List((user.seatNr - 1) -> user)
+      allUsers ++= List((user.seatNr - 1) -> user)
     }
 
 
@@ -50,12 +50,12 @@ class Dealer(fromTable : Table) {
   }
 
   def removeUser(user: Player) = {
-    allUsers -= (user.id - 1)
-    waitingUsers -= (user.id - 1)
+    allUsers -= (user.seatNr - 1)
+    waitingUsers -= (user.seatNr - 1)
 
     table.sendMessage(user.playername,"has left the table")
 
-    if(user.id == getPlayer.id) {
+    if(user.seatNr == getPlayer.seatNr) {
       checkStep
     }
 
@@ -222,8 +222,8 @@ class Dealer(fromTable : Table) {
   }
 
   def moveDealer: Unit = {
-    dealer = (dealer + 1) % (allUsers.values.toList.sort(_.id > _.id).headOption match {
-      case Some(player) =>  player.id + 1
+    dealer = (dealer + 1) % (allUsers.values.toList.sort(_.seatNr > _.seatNr).headOption match {
+      case Some(player) =>  player.seatNr + 1
       case None => 1
     })
     if (!allUsers.isDefinedAt(dealer) && !allUsers.isEmpty) {
@@ -232,8 +232,8 @@ class Dealer(fromTable : Table) {
   }
 
   def movePlayer: Unit = {
-    position = (position + 1) % (allUsers.values.toList.sort(_.id > _.id).headOption match {
-            case Some(player) => player.id + 1
+    position = (position + 1) % (allUsers.values.toList.sort(_.seatNr > _.seatNr).headOption match {
+            case Some(player) => player.seatNr + 1
             case None => 1
     })
     if (!allUsers.isDefinedAt(position) && !allUsers.isEmpty) {

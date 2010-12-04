@@ -17,7 +17,7 @@ import net.liftweb.util.ActorPing
 
 class Bot(tabler : Table, seat : Int, name : String) extends Player {
 
-  id = seat
+  seatNr = seat
   playername = name
   table = tabler
 
@@ -68,7 +68,7 @@ class Bot(tabler : Table, seat : Int, name : String) extends Player {
 
   override def setAction(player: Player) = {
 
-    if (player.id == this.id) {
+    if (player.seatNr == this.seatNr) {
 
       val chosen = (math.random < 0.1) match {
         case true => {

@@ -94,8 +94,8 @@ class Table extends LiftActor {
     case AddPlayerToTable(me, seat) => {
       
       if (!tableplayers.isDefinedAt(seat)) {
-        me.id = seat
-        tableplayers ++= List(me.id -> me)
+        me.seatNr = seat
+        tableplayers ++= List(me.seatNr -> me)
         updatePlayers
         //Tell dealer
         dealer.addUser(me)
@@ -243,13 +243,13 @@ class Table extends LiftActor {
   }
 
   def removePlayer(me : Player) = {
-    tableplayers.find(tup => tup._1 == me.id) match {
+    tableplayers.find(tup => tup._1 == me.seatNr) match {
         case Some((i, player)) => {
           tableplayers -= i
 
           //Tell dealer
           dealer.removeUser(player)
-          player.id = 0
+          player.seatNr = 0
           player.resetGame
 
           updatePlayers

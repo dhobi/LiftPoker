@@ -24,7 +24,7 @@ import LiftPoker.snippet.{currentTable, currentUser}
  */
 
 class Player extends CometActor {
-  var id: Int = 0
+  var seatNr: Int = 0
   var playername: String = currentUser.is
   var table: Table = currentTable.is
 
@@ -163,7 +163,7 @@ class Player extends CometActor {
 
   def clearNames: JsCmd = {
     (1 to table.getSize).map(i => {
-      val html: NodeSeq = id match {
+      val html: NodeSeq = seatNr match {
         case 0 => SHtml.a(() => {table ! AddPlayerToTable(this, i); JsCmds.Noop}, Text("Sit down"))
         case _ => Text("")
       }
@@ -173,7 +173,7 @@ class Player extends CometActor {
 
   def updatePlayers(users: List[Player]): JsCmd = {
     clearNames & users.map(user => {
-      JqSetHtml("player" + user.id + "name", Text(user.playername) ++
+      JqSetHtml("player" + user.seatNr + "name", Text(user.playername) ++
               <span style="margin-left:20px;">
                 {user.money.get}
               </span> ++ showExit(user))
@@ -181,7 +181,7 @@ class Player extends CometActor {
   }
 
   def showExit(user: Player) = {
-    (this.id == user.id) match {
+    (this.seatNr == user.seatNr) match {
       case true => <span style="margin-left:20px;">
         {SHtml.a(() => {table ! RemovePlayer(this); currentTable(null); resetGame; JsCmds.RedirectTo("/"); }, Text("x"))}
       </span>
@@ -197,10 +197,10 @@ class Player extends CometActor {
       user.getCards.map(card => {
         cardid = cardid + 1
         var img = "images/deckblatt.png"
-        if (user.id == this.id) {
+        if (user.seatNr == this.seatNr) {
           img = card.getImage
         }
-        JqSetHtml("player" + user.id + "card" + cardid, <img src={img} alt=" "/>)
+        JqSetHtml("player" + user.seatNr + "card" + cardid, <img src={img} alt=" "/>)
       }
         ).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
     }
@@ -208,21 +208,21 @@ class Player extends CometActor {
   }
 
   def updateMoney(user: Player, money: Int): JsCmd = {
-    JqSetHtml("player" + user.id + "money", <img src="images/chip.png" alt=" "/> <span>
+    JqSetHtml("player" + user.seatNr + "money", <img src="images/chip.png" alt=" "/> <span>
       {money}
     </span>)
   }
 
   def clearMoney(players: List[Player]): JsCmd = {
     players.map(p => {
-      JqSetHtml("player" + p.id + "money", Text(""))
+      JqSetHtml("player" + p.seatNr + "money", Text(""))
     }).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
   }
 
   def updateWait(users: List[Player], user: Player): JsCmd = {
     updatePlayers(users) &
             clearNamePlates &
-            JE.JsRaw("document.getElementById('player" + user.id + "name').setAttribute('class','playernameactive')").cmd &
+            JE.JsRaw("document.getElementById('player" + user.seatNr + "name').setAttribute('class','playernameactive')").cmd &
             setAction(user)
   }
 
@@ -245,7 +245,7 @@ class Player extends CometActor {
   def setAction(player: Player) = {
     var html: Seq[Node] = new Text("")
 
-    if (player.id == this.id) {
+    if (player.seatNr == this.seatNr) {
 
       //setTimeout
       future = ActorPing.schedule(table, RemovePlayer(this), 35000L)
@@ -264,11 +264,11 @@ class Player extends CometActor {
       }
 
     }
-    JqSetHtml("player" + id + "action", html) & JsRaw("countdown.stop();countdown.start('player" + player.id + "countdown')").cmd
+    JqSetHtml("player" + seatNr + "action", html) & JsRaw("countdown.stop();countdown.start('player" + player.seatNr + "countdown')").cmd
   }
 
   def hideActionForm: JsCmd = {
-    JqSetHtml("player" + id + "action", Text(""))
+    JqSetHtml("player" + seatNr + "action", Text(""))
 
   }
 
@@ -276,7 +276,7 @@ class Player extends CometActor {
     var cardid = 0
     player.getCards.map(card => {
       cardid = cardid + 1
-      JqSetHtml("player" + player.id + "card" + cardid, <img src="images/x.png" alt=" "/>)
+      JqSetHtml("player" + player.seatNr + "card" + cardid, <img src="images/x.png" alt=" "/>)
     }).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
   }
 
@@ -351,7 +351,7 @@ class Player extends CometActor {
         if (user.fold) {
           img = "images/x.png"
         }
-        JqSetHtml("player" + user.id + "card" + cardid, <img src={img} alt=" "/>)
+        JqSetHtml("player" + user.seatNr + "card" + cardid, <img src={img} alt=" "/>)
       }
         ).foldLeft[JsCmd](JsCmds.Noop)(_ & _)
     }
@@ -361,7 +361,7 @@ class Player extends CometActor {
   }
 
   def showWinner(winner: Player): JsCmd = {
-    JE.JsRaw("document.getElementById('player" + winner.id + "name').setAttribute('class','playernamewinner')").cmd &
+    JE.JsRaw("document.getElementById('player" + winner.seatNr + "name').setAttribute('class','playernamewinner')").cmd &
             JqSetHtml("winner", Text(winner.playername + " wins with " + winner.handrank.getRank.toString)) & JsCmds.JsShowId("winner")
   }
 
