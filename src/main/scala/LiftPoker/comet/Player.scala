@@ -62,9 +62,6 @@ class Player extends CometActor {
 
     table ! AddWatcher(this)
 
-    table ! UpdatePlayers
-    table ! UpdateCards
-
 
     def exitPlayer: JsCmd = {
       table ! RemoveWatcher(this);

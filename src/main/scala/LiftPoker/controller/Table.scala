@@ -81,7 +81,7 @@ class Table extends LiftActor {
   {
     case AddWatcher(me) => {
       //check if already on table --> possible by back button
-      tableplayers.find( tup => tup._2.uniqueId.equals(me.uniqueId)) match {
+      tableplayers.find(tup => tup._2.uniqueId.equals(me.uniqueId)) match {
         case Some((_, player)) => removePlayer(player)
         case None => ()
       }
@@ -90,13 +90,19 @@ class Table extends LiftActor {
         case Some(watcher) => ()
         case None => tablewatchers = tablewatchers ::: List(me)
       }
+
+      // players
+      updatePlayers(List(me))
+      // game might be in progress
+      updateCards(List(me))
+
     }
     case AddPlayerToTable(me, seat) => {
-      
+
       if (!tableplayers.isDefinedAt(seat)) {
         me.seatNr = seat
         tableplayers ++= List(me.seatNr -> me)
-        updatePlayers
+        updatePlayers(tablewatchers)
         //Tell dealer
         dealer.addUser(me)
       }
@@ -115,7 +121,7 @@ class Table extends LiftActor {
       sendStatusMessage(me.playername + " left the table (Timeout)")
     }
     case UpdatePlayers() => {
-      updatePlayers
+      updatePlayers(tablewatchers)
     }
     case Countdown() => {
       ActorPing.schedule(this, Seconds(5), 1000L)
@@ -135,10 +141,10 @@ class Table extends LiftActor {
     }
     case DealCards() => {
       tableplayers.values.foreach(player => player.addCards(cardstack.getCards(2)))
-      updateCards
+      updateCards(tablewatchers)
     }
     case UpdateCards() => {
-      updateCards
+      updateCards(tablewatchers)
     }
     case SmallBlind(player: Player) => {
       if (!interrupted) {
@@ -226,7 +232,7 @@ class Table extends LiftActor {
     case ShowDown() => {
       val orderedRankPlayers = dealer.showdown
       val winner = orderedRankPlayers.head
-      sendStatusMessage(winner.playername+" wins with "+winner.handrank)
+      sendStatusMessage(winner.playername + " wins with " + winner.handrank)
       winner.money.add(allPlayedMoney)
 
       updateAllMoney
@@ -242,29 +248,42 @@ class Table extends LiftActor {
     case _ =>
   }
 
-  def updatePlayers = {
-    tablewatchers.foreach(_ ! AddPlayers(tableplayers.values.toList))
-  }
-
-  def removePlayer(me : Player) = {
+  def removePlayer(me: Player) = {
     tableplayers.find(tup => tup._1 == me.seatNr) match {
-        case Some((i, player)) => {
-          tableplayers -= i
+      case Some((i, player)) => {
+        tableplayers -= i
 
-          //Tell dealer
-          dealer.removeUser(player)
-          player.seatNr = 0
-          player.resetGame
+        //Tell dealer
+        dealer.removeUser(player)
+        player.seatNr = 0
+        player.resetGame
 
-          me ! ResetGame
-          updatePlayers
-        }
-        case None => ()
+        me ! ResetGame
+        updatePlayers(tablewatchers)
       }
+      case None => ()
+    }
   }
 
-  def updateCards = {
-    tablewatchers.foreach(_ ! CardsDealed(tableplayers.values.toList))
+  def updatePlayers(players: List[Player]) = {
+    players.foreach(_ ! AddPlayers(tableplayers.values.toList))
+  }
+
+  def updateCards(players: List[Player]) = {
+    players.foreach(_ ! CardsDealed(tableplayers.values.toList))
+
+    if(!flop.isEmpty) {
+        players.foreach(_ ! ShowFlop(flop))
+    }
+
+    if(!turn.isEmpty) {
+        players.foreach(_ ! ShowTurn(turn))
+    }
+
+    if(!river.isEmpty) {
+        players.foreach(_ ! ShowRiver(river))
+    }
+
   }
 
   def updateAllMoney = {
@@ -290,8 +309,8 @@ class Table extends LiftActor {
   def resetGame() = {
     interrupted = true
     flop = List()
-    turn = null
-    river = null
+    turn = List()
+    river = List()
     cardstack = new CardStack
     roundmoney = Map()
     money = List()
