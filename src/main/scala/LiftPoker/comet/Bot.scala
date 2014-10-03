@@ -1,11 +1,11 @@
 package LiftPoker.comet
 
 import LiftPoker.controller._
-import xml.NodeSeq
+import LiftPoker.model.Card
 import net.liftweb.http.js.JsCmds
-import LiftPoker.model.{Money, Card}
-import com.sampullara.poker.HandRank
-import net.liftweb.util.ActorPing
+import net.liftweb.util.Schedule
+
+import scala.xml.NodeSeq
 
 /**
  * Created by IntelliJ IDEA.
@@ -15,7 +15,7 @@ import net.liftweb.util.ActorPing
  * To change this template use File | Settings | File Templates.
  */
 
-class Bot(tabler : Table, seat : Int, name : String) extends Player {
+class Bot(tabler: Table, seat: Int, name: String) extends Player {
 
   seatNr = seat
   playername = name
@@ -24,14 +24,16 @@ class Bot(tabler : Table, seat : Int, name : String) extends Player {
   cards = List()
   fold = false
   satisfied = false
-  handrank  = null
+  handrank = null
   usedMoney = 0
 
   //add on instantiation
   table ! AddWatcher(this)
-  table ! AddPlayerToTable(this, seat);
+  table ! AddPlayerToTable(this, seat)
 
-  override def render() = { NodeSeq.Empty}
+  override def render() = {
+    NodeSeq.Empty
+  }
 
   override def localSetup {}
 
@@ -91,7 +93,7 @@ class Bot(tabler : Table, seat : Int, name : String) extends Player {
           }
         }
       }
-      ActorPing.schedule(table, chosen, 1500L)
+      Schedule.schedule(table, chosen, 1500L)
     }
     JsCmds.Noop
   }
@@ -103,7 +105,7 @@ class Bot(tabler : Table, seat : Int, name : String) extends Player {
     usedMoney = 0
     satisfied = false
     if (future != null) {
-      future.cancel(true);
+      future.cancel(true)
     }
     JsCmds.Noop
   }

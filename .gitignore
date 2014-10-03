@@ -6,4 +6,7 @@
 # Can also ignore all directories and files in a directory.
 .idea/*
 
+project/project/*
+project/target/*
+
 

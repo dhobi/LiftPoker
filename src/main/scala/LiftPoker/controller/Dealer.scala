@@ -1,14 +1,12 @@
 package LiftPoker.controller
 
-import LiftPoker.comet.Player
-import net.liftweb.actor.LiftActor
-
-import net.liftweb.util.ActorPing
-import net.liftweb.util.Helpers._
-import LiftPoker.model.{Card, Poker}
-import com.sampullara.poker.{HandRank, Cards}
-import scala.collection.JavaConversions._
 import java.util.Collections
+
+import LiftPoker.comet.Player
+import LiftPoker.model.{Card, Poker}
+import com.sampullara.poker.{Cards, HandRank}
+import net.liftweb.util.Helpers._
+import net.liftweb.util.Schedule
 
 /**
  * Created by IntelliJ IDEA.
@@ -91,12 +89,12 @@ class Dealer(fromTable: Table) {
 
   def setBlinds = {
 
-    ActorPing.schedule(table, SmallBlind(getPlayer), 1000L)
+    Schedule.schedule(table, SmallBlind(getPlayer), 1000L)
     movePlayer
-    ActorPing.schedule(table, BigBlind(getPlayer), 2000L)
+    Schedule.schedule(table, BigBlind(getPlayer), 2000L)
     movePlayer
 
-    ActorPing.schedule(table, WaitForAction(allUsers.values.toList, getPlayer), 3000L)
+    Schedule.schedule(table, WaitForAction(allUsers.values.toList, getPlayer), 3000L)
 
   }
 
@@ -168,10 +166,10 @@ class Dealer(fromTable: Table) {
 
   def checkStep = {
     if (onlyOnePlayerLeft) {
-      getActivePlayers.first.money.add(table.allPlayedMoney)
+      getActivePlayers.head.money.add(table.allPlayedMoney)
       table ! UpdatePlayers
 
-      ActorPing.schedule(table, ResetGame(), 5000L)
+      Schedule.schedule(table, ResetGame(), 5000L)
     } else {
       if (getActivePlayers.filter(p => !p.satisfied).isEmpty) {
 
@@ -207,7 +205,7 @@ class Dealer(fromTable: Table) {
 
       user.setHandRank(new HandRank(cards))
     })
-    getActivePlayers.sort((p1, p2) => p1.handrank.compareTo(p2.handrank) < 0).reverse
+    getActivePlayers.sortWith((p1, p2) => p1.handrank.compareTo(p2.handrank) < 0).reverse
   }
 
   def updateMoney(player: Player, money: Int) = {
@@ -216,8 +214,8 @@ class Dealer(fromTable: Table) {
   }
 
   def moveDealer: Unit = {
-    dealer = (dealer + 1) % (allUsers.values.toList.sort(_.seatNr > _.seatNr).headOption match {
-      case Some(player) =>  player.seatNr + 1
+    dealer = (dealer + 1) % (allUsers.values.toList.sortWith(_.seatNr > _.seatNr).headOption match {
+      case Some(player) => player.seatNr + 1
       case None => 1
     })
     if (!allUsers.isDefinedAt(dealer) && !allUsers.isEmpty) {
@@ -226,9 +224,9 @@ class Dealer(fromTable: Table) {
   }
 
   def movePlayer: Unit = {
-    position = (position + 1) % (allUsers.values.toList.sort(_.seatNr > _.seatNr).headOption match {
-            case Some(player) => player.seatNr + 1
-            case None => 1
+    position = (position + 1) % (allUsers.values.toList.sortWith(_.seatNr > _.seatNr).headOption match {
+      case Some(player) => player.seatNr + 1
+      case None => 1
     })
     if (!allUsers.isDefinedAt(position) && !allUsers.isEmpty) {
       movePlayer

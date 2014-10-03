@@ -47,7 +47,7 @@ class CardStack {
 
   def getCards(i: Int) = {
     var playercards = cards.take(i)
-    cards = cards.remove(playercards.contains(_))
+    cards = cards.filterNot(card => playercards.contains(card))
     playercards
   }
 

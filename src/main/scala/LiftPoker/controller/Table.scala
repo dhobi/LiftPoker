@@ -1,13 +1,14 @@
 package LiftPoker.controller
 
-import net.liftweb.actor.LiftActor
 import LiftPoker.comet.Player
-import net.liftweb.util.ActorPing
-import net.liftweb.util.Helpers._
 import LiftPoker.model._
-import net.liftweb.http.{TemplateFinder, S}
-import xml.Text
-import net.liftweb.common.{Failure, Empty, Full, SimpleActor}
+import net.liftweb.actor.LiftActor
+import net.liftweb.common.{Empty, Failure, Full}
+import net.liftweb.http.Templates
+import net.liftweb.util.Helpers._
+import net.liftweb.util.Schedule
+
+import scala.xml.Text
 
 /**
  * Created by IntelliJ IDEA.
@@ -30,7 +31,7 @@ class Table extends LiftActor {
   protected val dealer = new Dealer(this)
   protected val size = 4
 
-  protected def tobind = TemplateFinder.findAnyTemplate("tables" :: "table" + size.toString :: Nil)
+  protected def tobind = Templates("tables" :: ("table" + size) :: Nil)
 
 
   var flop: List[Card] = List()
@@ -77,8 +78,7 @@ class Table extends LiftActor {
     raiseAmount
   }
 
-  protected def messageHandler =
-  {
+  protected def messageHandler = {
     case AddWatcher(me) => {
       //check if already on table --> possible by back button
       tableplayers.find(tup => tup._2.uniqueId.equals(me.uniqueId)) match {
@@ -109,7 +109,7 @@ class Table extends LiftActor {
     }
     case RemoveWatcher(me) => {
       tablewatchers.find(p => p.uniqueId.equals(me.uniqueId)) match {
-        case Some(watcher) => tablewatchers -= watcher
+        case Some(watcher) => tablewatchers = tablewatchers.filterNot(_.eq(watcher))
         case None => ()
       }
     }
@@ -124,14 +124,14 @@ class Table extends LiftActor {
       updatePlayers(tablewatchers)
     }
     case Countdown() => {
-      ActorPing.schedule(this, Seconds(5), 1000L)
+      Schedule.schedule(this, Seconds(5), 1000L)
       interrupted = false
     }
     case Seconds(s: Int) => {
       if (!interrupted) {
 
         if (s != 0) {
-          ActorPing.schedule(this, Seconds(s - 1), 1000L)
+          Schedule.schedule(this, Seconds(s - 1), 1000L)
           tableplayers.values.foreach(_ ! Seconds(s))
         } else {
           tableplayers.values.foreach(_ ! Seconds(s))
@@ -215,7 +215,7 @@ class Table extends LiftActor {
 
       turn = cardstack.getCards(1)
       tablewatchers.foreach(_ ! ShowTurn(turn))
-      sendStatusMessage("Turn: " + turn.firstOption.get.getJavaCard.toString)
+      sendStatusMessage("Turn: " + turn.head.getJavaCard.toString)
       updateAllMoney
       dealer.waitingForAction
     }
@@ -225,7 +225,7 @@ class Table extends LiftActor {
 
       river = cardstack.getCards(1)
       tablewatchers.foreach(_ ! ShowRiver(river))
-      sendStatusMessage("River: " + river.firstOption.get.getJavaCard.toString)
+      sendStatusMessage("River: " + river.head.getJavaCard.toString)
       updateAllMoney
       dealer.waitingForAction
     }
@@ -237,7 +237,7 @@ class Table extends LiftActor {
 
       updateAllMoney
       tablewatchers.foreach(_ ! ShowShowDown(tableplayers.values.toList, winner))
-      ActorPing.schedule(this, ResetGame(), 10000L)
+      Schedule.schedule(this, ResetGame(), 10000L)
     }
     case ResetGame() => {
       resetGame
@@ -272,16 +272,16 @@ class Table extends LiftActor {
   def updateCards(players: List[Player]) = {
     players.foreach(_ ! CardsDealed(tableplayers.values.toList))
 
-    if(!flop.isEmpty) {
-        players.foreach(_ ! ShowFlop(flop))
+    if (!flop.isEmpty) {
+      players.foreach(_ ! ShowFlop(flop))
     }
 
-    if(!turn.isEmpty) {
-        players.foreach(_ ! ShowTurn(turn))
+    if (!turn.isEmpty) {
+      players.foreach(_ ! ShowTurn(turn))
     }
 
-    if(!river.isEmpty) {
-        players.foreach(_ ! ShowRiver(river))
+    if (!river.isEmpty) {
+      players.foreach(_ ! ShowRiver(river))
     }
 
   }
@@ -299,7 +299,7 @@ class Table extends LiftActor {
   }
 
   def getHighestRoundMoney = {
-    roundmoney.values.toList.sort(_.get > _.get).firstOption.getOrElse(new Money(0))
+    roundmoney.values.toList.sortWith(_.get > _.get).headOr(new Money(0))
   }
 
   def allPlayedMoney = {
@@ -323,43 +323,67 @@ class Table extends LiftActor {
 case class Seconds(s: Int)
 
 case class AddWatcher(actor: Player)
+
 case class RemoveWatcher(actor: Player)
+
 case class RemovePlayer(actor: Player)
+
 case class TimeOut(actor: Player)
+
 case class AddPlayerToTable(actor: Player, seat: Int)
+
 case class AddPlayers(players: List[Player])
+
 case class UpdatePlayers()
 
 case class Countdown()
+
 case class DealCards()
+
 case class UpdateCards()
+
 case class CardsDealed(players: List[Player])
+
 case class SmallBlind(player: Player)
+
 case class BigBlind(player: Player)
+
 case class SetMoney(player: Player, money: Int)
 
 case class PutSmallBlind(player: Player, money: Int)
+
 case class PutBigBlind(player: Player, money: Int)
 
 case class WaitForAction(players: List[Player], player: Player)
+
 case class PutWait(players: List[Player], player: Player)
+
 case class ResetGame()
+
 case class StopCountdown()
 
 case class Fold(player: Player)
+
 case class Call(player: Player)
+
 case class Check(player: Player)
+
 case class Raise(player: Player)
 
 case class ShowFlop(cards: List[Card])
+
 case class ShowTurn(cards: List[Card])
+
 case class ShowRiver(cards: List[Card])
+
 case class ShowShowDown(players: List[Player], winner: Player)
 
 case class ShowAllMoney(players: List[Player], money: Int)
 
 case class SendMessage(player: String, str: String)
+
 case class ShowMessage(player: String, str: String)
+
 case class ShowStatusMessage(message: String)
 
 object Table {
